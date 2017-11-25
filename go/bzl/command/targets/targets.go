@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"io"
-	"os/exec"
 	"text/tabwriter"
-	//"github.com/davecgh/go-spew/spew"
+	"github.com/bzl-io/bzl/bazel"
 	"github.com/urfave/cli"
-	"github.com/golang/protobuf/proto"
 	build "github.com/bzl-io/bzl/proto/build_go"
 )
 
@@ -26,8 +24,7 @@ func execute(c *cli.Context) error {
 		pattern = "//..."
 	} 	
 	
-	fmt.Println("Pattern:", pattern)
-	query, err := invokeQuery(pattern)
+	query, err := bazel.New().Query(pattern)
 	if err != nil {
 		return err
 	}
@@ -63,32 +60,3 @@ func printGeneratedFile(w io.Writer, file *build.GeneratedFile) {
 	fmt.Fprintln(w, "generated\tfile\t", *file.Name)
 }
 
-func invokeQuery(pattern string) (*build.QueryResult, error) {
-	var (
-		cmdOut []byte
-		err    error
-	)
-	cmdName := "bazel"
-	cmdArgs := []string{
-		"query", pattern,
-		"--output", "proto",
-	}
-
-	cmd := exec.Command(cmdName, cmdArgs...)
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("Query Error: ", string(out), err, "\n")
-		return nil, err
-	}
-	build := &build.QueryResult{}
-	err = proto.Unmarshal(out, build)
-	if err != nil {
-		fmt.Printf("Query Error: ", string(cmdOut), err, "\n")
-		
-		return nil, err
-	}
-
-	//spew.Dump("QUERY", build)
-	
-	return build, nil
-}

@@ -3,18 +3,18 @@
 
 http_archive(
     name = "io_bazel_rules_go",
-    url = "https://github.com/bazelbuild/rules_go/releases/download/0.7.0/rules_go-0.7.0.tar.gz",
-    sha256 = "91fca9cf860a1476abdc185a5f675b641b60d3acf0596679a27b580af60bf19c",
+    url = "https://github.com/bazelbuild/rules_go/archive/go/bzl/command/release/76acdc5c4ab7321fa6f26936f4efa42a2a2c0b0.zip",
+    strip_prefix = "rules_go-76acdc5c4ab7321fa6f26936f4efa42a2a2c0b01",
+    sha256 = "1c4da45f9e25a4b0e71534cf2b6fc49070c6cb05d6e71a34315fee7cc01d71c6",
 )
 
 load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains", "go_repository")
-
-load("@io_bazel_rules_go//proto:def.bzl", "proto_register_toolchains")
 
 go_rules_dependencies()
 
 go_register_toolchains()
 
+load("@io_bazel_rules_go//proto:def.bzl", "proto_register_toolchains")
 
 proto_register_toolchains()
 
@@ -81,9 +81,28 @@ go_repository(
 )
 
 go_repository(
-    name = "com_github_mattn_go_runewidth",
-    importpath = "github.com/mattn/go-runewidth",
-    commit = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",
+    name = "com_github_pkg_errors",
+    importpath = "github.com/pkg/errors",
+    commit = "f15c970de5b76fac0b59abb32d62c17cc7bed265",
+)
+
+# go_repository(
+#     name = "com_github_mattn_go_runewidth",
+#     importpath = "github.com/mattn/go-runewidth",
+#     commit = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",
+# )
+
+
+go_repository(
+    name = "org_golang_x_tools",
+    importpath = "github.com/golang/tools",
+    commit = "9b61fcc4c548d69663d915801fc4b42a43b6cd9c",
+)
+
+go_repository(
+    name = "org_golang_x_sync",
+    importpath = "github.com/golang/sync",
+    commit = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5",
 )
 
 go_repository(
@@ -98,20 +117,47 @@ go_repository(
     commit = "b8bc1bf767474819792c23f32d8286a45736f1c6",
 )
 
+# There exist multiple options for terminal-based progress bars, but
+# this is the only one I could find that cross-compiles cleanly with
+# current version of rules_go.  Not super fancy though.
+go_repository(
+    name = "com_github_mitchellh_ioprogress",
+    importpath = "github.com/mitchellh/ioprogress",
+    commit = "8163955264568045f462ae7e2d6d07b2001fc997",
+)
+
 go_repository(
     name = "com_github_joeybloggs_go_download",
     importpath = "github.com/joeybloggs/go-download",
     commit = "26df310821f0e7614a736a2ee38ecd7e2f6ef6da",
 )
 
+go_repository(
+    name = "com_github_rs_cors",
+    importpath = "github.com/rs/cors",
+    commit = "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8", # Aug 1
+)
 
+go_repository(
+    name = "com_github_gorilla_mux",
+    importpath = "github.com/gorilla/mux",
+    commit = "3f19343c7d9ce75569b952758bd236af94956061",
+)
 
-#git_repository(
- # name = "org_pubref_rules_protobuf",
- # remote = "https://github.com/pubref/rules_protobuf",
- # tag = "v0.8.1",
-    #)
+go_repository(
+    name = "com_github_gorilla_context",
+    importpath = "github.com/gorilla/context",
+    commit = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+)
 
-#load("@org_pubref_rules_protobuf//go:rules.bzl", "go_proto_repositories")
+go_repository(
+    name = "com_github_vbauerster_mpb",
+    importpath = "github.com/vbauerster/mpb",
+    commit = "d3da256ab98a80013319df621e48db638748c044",
+)
 
-#go_proto_repositories()
+go_repository(
+    name = "com_github_matttproud_golang_protobuf_extensions",
+    importpath = "github.com/matttproud/golang_protobuf_extensions",
+    commit = "c12348ce28de40eed0136aa2b644d0ee0650e56c",
+)

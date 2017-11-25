@@ -7,3 +7,11 @@ go_proto_library(
     ],
     visibility = ["//visibility:public"],
 )
+
+go_proto_library(
+    name = "build_event_stream_go",
+    srcs = [
+        "build_event_stream.proto",
+    ],
+    visibility = ["//visibility:public"],
+)
