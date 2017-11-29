@@ -337,7 +337,6 @@ func install(c *cli.Context, filename string) error {
 	cmdName := "bash"
 	cmdArgs := []string {
 		filename,
-		"--help",
 		"--user",
 	}
 	

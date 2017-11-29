@@ -51,8 +51,12 @@ var Command = &cli.Command{
 			Name: "commit",
 			Usage: "Commit ID for the release",
 		},
+		cli.BoolFlag{
+			Name: "dry_run",
+			Usage: "Build assets, but don't actually create a release",
+		},
 	},
-	Usage:   "Build a target for (multiple) platform(s)",
+	Usage:   "Build target binaries for (multiple) platform(s) and publish a release to GitHub",
 	Action:  execute,
 }
 
@@ -251,6 +255,9 @@ func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, e
 
 func createRelease(c *cli.Context, client *github.Client, req *github.RepositoryRelease, files []string) (*github.RepositoryRelease, error) {
 	ctx := context.Background()
+	if c.Bool("dry_run") {
+		return nil, cli.NewExitError("Create release stopped early (dry_run is ON)", 1)
+	}
 	release, res, err := client.Repositories.CreateRelease(ctx, c.String("owner"), c.String("repo"), req)
 	if err != nil {
 		spew.Dump(res, err)
