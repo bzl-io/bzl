@@ -4,28 +4,25 @@ import (
 	"crypto/sha256"	
 	"encoding/hex"
 	"fmt"
-	"github.com/urfave/cli"
 	"github.com/bzl-io/bzl/gh"
 	"github.com/google/go-github/github"
-	download "github.com/joeybloggs/go-download"
+	"github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/ioprogress"
+	"github.com/urfave/cli"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"os/exec"
-	"net/http"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"text/tabwriter"
-	//homedir "github.com/mitchellh/go-homedir"
-	"github.com/mitchellh/go-homedir"
-	"github.com/mitchellh/ioprogress"
+	download "github.com/joeybloggs/go-download"
 	humanize "github.com/dustin/go-humanize"	
-	//pb "github.com/cheggaaa/pb"
-	//"github.com/vbauerster/mpb"
-	
 )
 
 var Command = &cli.Command{
@@ -187,8 +184,8 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 
 	if actual != expected[0] {
 		if c.Bool("force") {
-			fmt.Printf(
-				"%s: got sha256 '%s' but expected '%s' (from %s).  Proceeding with install dut to --force\n",
+			log.Printf(
+				"%s: got sha256 '%s' but expected '%s' (from %s).  Proceeding with install due to --force\n",
 				exe,
 				actual,
 				expected,
@@ -205,9 +202,9 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 		}
 	}
 	
-	fmt.Printf("Sha256 match %s: %s, proceeding with install\n", exe, sha)
+	log.Printf("Sha256 match %s: %s, proceeding with install\n", exe, sha)
 
-	install(c, exe)
+	install(c, version, exe)
 	return nil
 }
 
@@ -333,13 +330,27 @@ func dl(reader io.Reader, writer io.Writer, size int64, title string) error {
 	return nil
 }
 
-func install(c *cli.Context, filename string) error {
+func install(c *cli.Context, version, filename string) error {
 	cmdName := "bash"
+
+	prefix := ""
+	homeDir, err := homedir.Dir()
+	if err == nil {
+		prefix = path.Join(homeDir, ".cache", "bzl", "release", version)
+		os.MkdirAll(prefix, os.ModePerm)
+	}
+
 	cmdArgs := []string {
 		filename,
-		"--user",
 	}
-	
+
+	if prefix == "" {
+		cmdArgs = append(cmdArgs, "--user")
+	} else {
+		cmdArgs = append(cmdArgs, "--prefix=" + prefix)
+	}
+
+	log.Printf("Installing %v", cmdArgs)
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

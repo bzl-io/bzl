@@ -25,8 +25,10 @@ go_binary(
         ":app",
     ],
     visibility = ["//visibility:public"],
-    data = [
-    ],
+    linkstamp = "github.com/bzl-io/bzl",
+    x_defs = {
+        "github.com/bzl-io/bzl.BUILD_SCM_REVISION": "{BUILD_SCM_REVISION}",
+    },
 )
 
 sh_test(
