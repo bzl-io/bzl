@@ -9,13 +9,14 @@ import (
 	"os/exec"
 	"github.com/golang/protobuf/proto"
 	"github.com/matttproud/golang_protobuf_extensions/pbutil"
-	"github.com/mitchellh/go-homedir"
+	"github.com/bzl-io/bzl/config"
 	build  "github.com/bzl-io/bzl/proto/build_go"
 	stream "github.com/bzl-io/bzl/proto/build_event_stream_go"
 )
 
 // Default bazel version is whatever is currently in the users' path.
 var bazel = "bazel"
+var home = ""
 
 type Bazel struct {
 	Name string
@@ -29,11 +30,12 @@ func New() *Bazel {
 
 // Set the version of bazel to use.  Given '0.7.0', this looks for .cache/bzl/release/0.7.0/bin/bazel.
 func SetVersion(version string) error {
-	homeDir, err := homedir.Dir()
+	home, err := config.GetHome()
 	if err != nil {
 		return err
 	}
-	exe := path.Join(homeDir, ".cache", "bzl", "release", version, "bin", "bazel")
+	
+	exe := path.Join(home, "release", version, "bin", "bazel")
 	if _, err := os.Stat(exe); os.IsNotExist(err) {
 		log.Printf("Error: bazel %s does not exist in the release cache.  Try 'bzl install %s' first.", version, version)
 		return err

@@ -15,3 +15,4 @@ go_proto_library(
     ],
     visibility = ["//visibility:public"],
 )
+

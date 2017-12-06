@@ -8,7 +8,7 @@ go_library(
     deps = [
         "//proto:build_go",
         "//proto:build_event_stream_go",
-        "@com_github_mitchellh_go_homedir//:go_default_library",                
+        "//go/bzl/config",
         "@com_github_golang_protobuf//ptypes/any:go_default_library",
         "@com_github_matttproud_golang_protobuf_extensions//pbutil:go_default_library",        
         "@com_github_golang_protobuf//proto:go_default_library",

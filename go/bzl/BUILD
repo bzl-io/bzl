@@ -7,6 +7,7 @@ go_library(
     ],
     deps = [
         "//go/bzl/bazel",
+        "//go/bzl/plugin",
         "//go/bzl/command/install",
         "//go/bzl/command/targets",
         "//go/bzl/command/release",

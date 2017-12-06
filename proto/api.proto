@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+message PluginRequest {
+  string organization = 1;
+  string name = 2;
+}
+
+message PluginResponse {
+  string organization = 1;
+  string name = 2;
+  int64 length = 3;
+  bytes content = 4;
+}
+
+service PluginApi {
+  rpc GetPlugin(PluginRequest) returns (PluginResponse) {}
+}
