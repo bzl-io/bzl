@@ -11,6 +11,7 @@ import (
 	"github.com/golang/sync/errgroup"	
 	"github.com/davecgh/go-spew/spew"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -46,6 +47,10 @@ var Command = &cli.Command{
 		cli.StringFlag{
 			Name: "tag",
 			Usage: "Tag name for the release",
+		},
+		cli.StringFlag{
+			Name: "notes",
+			Usage: "Release notes filename (a path to markdown file)",
 		},
 		cli.StringFlag{
 			Name: "commit",
@@ -240,17 +245,32 @@ func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, e
 	if commit == "" {
 		return nil, errors.New("--commit is required when publishing a release")
 	}
-
+	notes, err := getReleaseNotes(c.String("notes"))
+	if err != nil {
+		return nil, err
+	}
 	fmt.Println("Uploading assets for release", tag, "...")
 	
 	client := gh.Client()
 		
 	req := &github.RepositoryRelease{
 		TagName: &tag,
+		TargetCommitish: &commit,
+		Body: &notes,
 	}
 	
 	release, err := createRelease(c, client, req, files)
 	return release, err
+}
+
+// Read the given filename into a string.  Return err if any io error
+// occured.
+func getReleaseNotes(filename string) (string, error) {
+	bytes, err := ioutil.ReadFile(filename) 
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }
 
 func createRelease(c *cli.Context, client *github.Client, req *github.RepositoryRelease, files []string) (*github.RepositoryRelease, error) {
@@ -263,6 +283,9 @@ func createRelease(c *cli.Context, client *github.Client, req *github.Repository
 		spew.Dump(res, err)
 		if res.StatusCode == 404 {
 			fmt.Fprintf(os.Stderr, "Github responded with 404 for %s/%s; this may represent an authentication error.  Confirm that the env vars BZL_GH_USERNAME and BZL_GH_PASSWORD are set with PUSH access to this repository (https://developer.github.com/v3/troubleshooting/).\n", c.String("owner"), c.String("repo"))
+		}
+		if res.StatusCode == 422 {
+			fmt.Fprintf(os.Stderr, "Github responded with 422 (validation Failed).  This can occur for multiple reasons, but one thing to check is that the target --commit actually exists at the remote repository.\n")
 		}
 		return nil, cli.NewExitError(fmt.Sprintf("Create release failed: %v", err), 1)
 	}

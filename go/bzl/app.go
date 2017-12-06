@@ -1,6 +1,7 @@
 package bzl
 
 import (
+	"fmt"
 	"github.com/urfave/cli"
 	"github.com/bzl-io/bzl/bazel"
 	"github.com/bzl-io/bzl/command/install"
@@ -11,6 +12,7 @@ import (
 
 // Will be replaced at link time to `git rev-parse HEAD`
 var BUILD_SCM_REVISION = "0000000000000000000000000000000000000000"
+var BUILD_SCM_DATE = "0000-00-00"
 
 // App embeds an urfave/cli.App 
 type App struct {
@@ -25,8 +27,8 @@ func New() *App {
 	// Create Cli inner app
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
-	app.Usage = "A candy wrapper for the Bazel build tool"
-	app.Version = BUILD_SCM_REVISION
+	app.Usage = "A wrapper for the Bazel build tool"
+	app.Version = fmt.Sprintf("%s (%s)", BUILD_SCM_REVISION, BUILD_SCM_DATE)
 
 	// Global flags for bzl app
 	app.Flags = []cli.Flag{
