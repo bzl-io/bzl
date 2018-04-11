@@ -1,16 +1,8 @@
 # bzl
 
-`bzl` is a command-line application that adds extra functionality to
-[bazel](https://bazel.build). In practice, it acts as a drop-in
-replacement for bazel itself (and shorter to type!). Any command or
-command-line-option not specifically interpreted by bzl is passed
-directly to bazel itself.
-
-For example: `$ bzl build :app` works like you'd expect.
-
-## Status
-
-Experimental.
+`bzl` is a command-line application that makes it easier to work with
+multiple versions of bazel.  You can install different versions and
+easily switch between them.
 
 ## Install bzl
 

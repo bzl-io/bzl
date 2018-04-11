@@ -9,7 +9,6 @@ go_library(
         "//go/bzl/bazel",
         "//go/bzl/command/install",
         "//go/bzl/command/targets",
-        "//go/bzl/command/release",
         "@com_github_urfave_cli//:go_default_library",
     ],
     importpath = "github.com/bzl-io/bzl",

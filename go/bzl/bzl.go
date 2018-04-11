@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/bzl-io/bzl"
 	"os"
+	"github.com/bzl-io/bzl"
 )
 
 func main() {

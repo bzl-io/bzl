@@ -67,12 +67,17 @@ var Command = &cli.Command{
 
 func execute(c *cli.Context) error {
 	platforms := c.StringSlice("platform")
-	if len(platforms) == 0 {
-		return cli.NewExitError("The 'release' command requires one or more '--platform GOOS_GOARCH' flags", 1)
-	}
-	target := c.Args().First()
-	if target == "" {
-		return cli.NewExitError("The 'release' command requires a build target", 1)
+	target := ""
+	
+	//if len(platforms) == 0 {
+	//	return cli.NewExitError("The 'release' command requires a build target in combination with '--platform GOOS_GOARCH' flags", 1)
+	//}
+
+	if len(platforms) > 0 {
+		target = c.Args().First()
+		if target == "" {
+			return cli.NewExitError("The 'release' command requires a build target in combination with platformss", 1)
+		}
 	}
 
 	allFiles := make([]string, 0)
@@ -160,7 +165,7 @@ func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, fil
 		return "", err
 	}
 
-	fmt.Printf("Relocated %s for '%s' to %s\n", file.GetName(), platform, platformFile)
+	fmt.Printf("Staged %s for '%s' to %s\n", file.GetName(), platform, platformFile)
 	return platformFile, nil
 }
 

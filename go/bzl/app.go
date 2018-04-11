@@ -1,11 +1,11 @@
 package bzl
 
 import (
+	"os"
 	"fmt"
 	"github.com/urfave/cli"
 	"github.com/bzl-io/bzl/bazel"
 	"github.com/bzl-io/bzl/command/install"
-	"github.com/bzl-io/bzl/command/release"
 	"github.com/bzl-io/bzl/command/targets"
 	"log"
 )
@@ -35,13 +35,13 @@ func New() *App {
 		cli.StringSliceFlag{
 			Name: "bazel",
 			Usage: "Use this version(s) of bazel when running subcommand",
+			EnvVar: "BAZEL_VERSION",
 		},
 	}
 	
 	// Add commands
 	app.Commands = []cli.Command{
 		*install.Command,
-		*release.Command,
 		*targets.Command,
 	}
 
@@ -57,13 +57,22 @@ func New() *App {
 			for _, version := range c.GlobalStringSlice("bazel") {
 				err := bazel.SetVersion(version)
 				if err != nil {
-					log.Fatalf("Invalid bazel version %s, aborting.", version)
+					log.Fatalf("Invalid bazel version %s, aborting: %v", version, err)
 				}
-				bazel.New().Invoke(args)				
+				err, exitCode := bazel.New().Invoke(args)
+				if exitCode != 0 {
+					log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
+					os.Exit(exitCode)
+				}
 			}
 		} else {
+			log.Println("BAZEL_VERSION not set, falling back to bazel on your PATH")
 			args = append(args, c.Args().Tail()...)
-			bazel.New().Invoke(args)
+			err, exitCode := bazel.New().Invoke(args)
+			if exitCode != 0 {
+				log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
+				os.Exit(exitCode)
+			}
 		}
 	}
 

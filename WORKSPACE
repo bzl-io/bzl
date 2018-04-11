@@ -3,9 +3,9 @@
 
 http_archive(
     name = "io_bazel_rules_go",
-    url = "https://github.com/bazelbuild/rules_go/archive/473ed9b2bf3279bfb52cc85dd3a9d22a2f99d9a6.zip",
-    strip_prefix = "rules_go-473ed9b2bf3279bfb52cc85dd3a9d22a2f99d9a6",
-    sha256 = "776118269dd7fbf700092fd85c9b7ee51e04cf427db6d4c403b2c2bd2eea911f",
+    url = "https://github.com/bazelbuild/rules_go/archive/9031d58ed5017dcaf87e72e06736ef4209f96aee.zip",
+    strip_prefix = "rules_go-9031d58ed5017dcaf87e72e06736ef4209f96aee",
+    sha256 = "e586877342811e61baf8256da8d78a4bfd50084331832b84082f211e8512958d",
 )
 
 load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains", "go_repository")
@@ -13,10 +13,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_too
 go_rules_dependencies()
 
 go_register_toolchains()
-
-load("@io_bazel_rules_go//proto:def.bzl", "proto_register_toolchains")
-
-proto_register_toolchains()
 
 # ================================================================
 
