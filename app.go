@@ -11,6 +11,7 @@ import (
 	"github.com/bzl-io/bzl/command/install"
 	"github.com/bzl-io/bzl/command/release"
 	"github.com/bzl-io/bzl/command/targets"
+	"github.com/bzl-io/bzl/command/use"
 )
 
 // Will be replaced at link time to `git rev-parse HEAD`
@@ -39,6 +40,7 @@ func NewApp() *App {
 	app.EnableBashCompletion = true
 	app.Usage = "Wrapper for the Bazel build tool"
 	app.Version = fmt.Sprintf("https://github.com/bzl-io/bzl/tree/%s (%s)", BuildScmRevision, BuildScmDate)
+	app.HideHelp = true
 
 	// Global flags for bzl app
 	app.Flags = []cli.Flag{
@@ -54,6 +56,7 @@ func NewApp() *App {
 		*install.Command,
 		*targets.Command,
 		*release.Command,
+		*use.Command,
 	}
 
 	instance := &App{

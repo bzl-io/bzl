@@ -4,11 +4,8 @@
 versions of bazel.  You can install different versions and easily switch between
 them.
 
-## Install bzl
-
-`bzl` ships as a single executable go binary. Download the file directly from
-the [Github Releases Page](https://github.com/bzl-io/bzl/releases) for the
-precompiled platform of your choice (or build from source).
+`bzl` is a drop-in replacement for `bazel`. Any commands not recognized by `bzl`
+are passed through as-is to `bazel`.
 
 ## How is `bzl` pronounced?
 
@@ -19,13 +16,25 @@ it's function (a wrapper around bazel).
 > add functions to a watch without complicating the movement, and so the
 > external watch bezel was born.
 
+## Install bzl
+
+`bzl` ships as a single executable go binary. Download the file directly from
+the [Github Releases Page](https://github.com/bzl-io/bzl/releases) for the
+precompiled platform of your choice (or build from source).
+
+Once downloaded `chmod +x` and `mv bzl ~/bin/bazel` and type `bazel install` to
+list the available versions.
+
+Specify the version of bazel to use either via an environment variable or
+command line flag (example: `BAZEL_VERSION=0.24.1`; `--bazel=0.19.2`).
+
 ## `bzl` commands
 
-### `$ bzl --help`
+### `$ bazel --help`
 
 Show help.
 
-### `$ bzl install`
+### `$ bazel install`
 
 List or install available bazel installs.
 
@@ -33,18 +42,60 @@ Examples:
 
 | Command | Description |
 | --- | --- |
-| `$ bzl install` | List all available releases |
-| `$ bzl install 0.8.0` | Install bazel release 0.8.0 |
-| `$ bzl install --list 0.8.0` | Show the assets bundled in install 0.8.0 |
+| `$ bazel install` | List all available releases |
+| `$ bazel install 0.8.0` | Install bazel release 0.8.0 |
+| `$ bazel install --list 0.8.0` | Show the assets bundled in install 0.8.0 |
 
-### `$ bzl target`
+### `$ bazel use`
+
+Print a repository rule for a github bazel repository.
+
+Without a release tag, list available releases:
+
+```
+$ bazel use grpc-ecosystem/grpc-gateway 
+
+v1.8.5        Fri Mar 15 2019
+v1.8.4        Wed Mar 13 2019
+v1.8.3        Mon Mar 11 2019
+v1.8.2        Thu Mar 07 2019
+v1.8.1        Sat Mar 02 2019
+```
+
+With a release tag, output an `http_archive` rule:
+
+```
+$ bazel use grpc-ecosystem/grpc-gateway v1.8.5
+
+http_archive(
+    name = "grpc_ecosystem_grpc_gateway",
+    urls = ["https://github.com/grpc-ecosystem/grpc-gateway/archive/v1.8.5.tar.gz"],
+    strip_prefix = "grpc-gateway-1.8.5",
+    sha256 = "9d7cf2ce799002024f215d3ff2df4882c347563478093a4671b13154ba37982c",
+)
+```
+
+The `bazelbuild` organization is assumed if you leave out the organization name:
+
+```
+$ bazel use rules_go
+
+0.18.3    Fri Apr 12 2019
+0.17.4    Fri Apr 12 2019
+0.16.10   Fri Apr 12 2019
+0.18.2    Sat Apr 06 2019
+...
+```
+
+### `$ bazel target`
 
 Pretty-print available targets in the current workspace.
 
 Example:
 
 ```
-$ bzl targets
+$ bazel targets
+
 go_library        rule  //proto/bes:go_default_library
 go_library        rule  //:go_default_library
 go_library        rule  //command:go_default_library
@@ -67,7 +118,7 @@ go_library        rule  //command/use:go_default_library
 _buildifier       rule  //:buildifier
 ```
 
-### `$ bzl release`
+### `$ bazel release`
 
 Publish a release for a `go_binary` target.
 
@@ -92,7 +143,7 @@ rules_go.  Here's what the command does:
 Example:
 
 ```
-$ bzl release \
+$ bazel release \
     --owner=bzl-io \
     --repo=bzl \
     --commit=91801a92ea21cd73471e5a83ad2519d1a3f257f0 \

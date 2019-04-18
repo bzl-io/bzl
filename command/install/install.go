@@ -266,7 +266,7 @@ func downloadAsset(baseDir string, asset *github.ReleaseAsset) (string, error) {
 		err = downloadUrl(redirect, out, int64(*asset.Size), *asset.Name)
 	} else {
 		defer rc.Close()
-		err = dl(rc, out, int64(*asset.Size), *asset.Name)
+		err = Download(rc, out, int64(*asset.Size), *asset.Name)
 	}
 
 	return filename, nil
@@ -285,7 +285,7 @@ func downloadUrl(url string, out io.Writer, size int64, title string) error {
 		return err
 	}
 
-	return dl(resp.Body, out, size, title)
+	return Download(resp.Body, out, size, title)
 }
 
 func downloadUrl2(url string, out io.Writer, size int64, title string) error {
@@ -295,12 +295,12 @@ func downloadUrl2(url string, out io.Writer, size int64, title string) error {
 	}
 	defer f.Close()
 
-	return dl(f, out, size, title)
+	return Download(f, out, size, title)
 }
 
 // download accepts a reader, writer, and expected asset size, copies
 // the bytes through and displays progress to the console.
-func dl(reader io.Reader, writer io.Writer, size int64, title string) error {
+func Download(reader io.Reader, writer io.Writer, size int64, title string) error {
 	// Attempt 1:
 	// bar := pb.New(size).SetUnits(pb.U_BYTES)
 	// bar.Prefix(title)

@@ -1,3 +1,5 @@
+workspace(name = "io_bzl_bzl")
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 local_repository(
@@ -5,7 +7,12 @@ local_repository(
     path = "/home/pcj/go/src/github.com/stackb/rules_proto",
 )
 
-load("@build_stack_rules_proto//:deps.bzl", "bazel_gazelle", "com_github_bazelbuild_buildtools", "io_bazel_rules_go")
+load(
+    "@build_stack_rules_proto//:deps.bzl",
+    "bazel_gazelle",
+    "com_github_bazelbuild_buildtools",
+    "io_bazel_rules_go",
+)
 
 io_bazel_rules_go()
 
@@ -93,12 +100,6 @@ go_repository(
     importpath = "github.com/pkg/errors",
 )
 
-# go_repository(
-#     name = "com_github_mattn_go_runewidth",
-#     importpath = "github.com/mattn/go-runewidth",
-#     commit = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",
-# )
-
 go_repository(
     name = "org_golang_x_tools",
     commit = "9b61fcc4c548d69663d915801fc4b42a43b6cd9c",
@@ -123,9 +124,9 @@ go_repository(
     importpath = "github.com/mitchellh/go-homedir",
 )
 
-# There exist multiple options for terminal-based progress bars, but
-# this is the only one I could find that cross-compiles cleanly with
-# current version of rules_go.  Not super fancy though.
+# There exist multiple options for terminal-based progress bars, but this is the
+# only one I could find that cross-compiles cleanly with current version of
+# rules_go.  Not super fancy though.
 go_repository(
     name = "com_github_mitchellh_ioprogress",
     commit = "8163955264568045f462ae7e2d6d07b2001fc997",

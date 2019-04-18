@@ -25,10 +25,13 @@ func execute(c *cli.Context) error {
 		pattern = "//..."
 	}
 
+	fmt.Printf("args: %+v", c.Command)
+
 	query, err := bazelutil.New().Query(pattern)
 	if err != nil {
 		return err
 	}
+
 	//fmt.Println("Targets:", len(query.GetTarget()))
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
@@ -49,7 +52,6 @@ func execute(c *cli.Context) error {
 }
 
 func printRule(w io.Writer, rule *build.Rule) {
-	//fmt.Fprintln(w, "rule\t", *rule.Name, "\t", *rule.RuleClass)
 	fmt.Fprintln(w, *rule.RuleClass, "\trule\t", *rule.Name)
 }
 
