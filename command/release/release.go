@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bzl-io/bzl/bazel"
+	"github.com/bzl-io/bzl/bazelutil"
 	"github.com/bzl-io/bzl/gh"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/sync/errgroup"
@@ -91,12 +91,12 @@ func execute(c *cli.Context) error {
 			target,
 		}
 
-		events, err := bazel.New().InvokeWithEvents(args)
+		events, err := bazelutil.New().InvokeWithEvents(args)
 		if err != nil {
 			return err
 		}
 
-		completed := bazel.FirstTargetComplete(events)
+		completed := bazelutil.FirstTargetComplete(events)
 		if completed == nil || !completed.Success {
 			return cli.NewExitError(fmt.Sprintf("The invocation failed to complete: %s", args), 1)
 		}

@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/bzl-io/bzl/command/targets",
     visibility = ["//visibility:public"],
     deps = [
-        "//bazel:go_default_library",
+        "//bazelutil:go_default_library",
         "//proto/build:go_default_library",
         "@com_github_urfave_cli//:go_default_library",
     ],

@@ -1,4 +1,4 @@
-package bazel
+package bazelutil
 
 import (
 	"fmt"
@@ -9,11 +9,12 @@ import (
 	"path"
 	"syscall"
 
-	stream "github.com/bzl-io/bzl/proto/build_event_stream_go"
-	build "github.com/bzl-io/bzl/proto/build_go"
-	"github.com/bzl-io/go/bzl/config"
+	"github.com/bzl-io/bzl/config"
 	"github.com/golang/protobuf/proto"
 	"github.com/matttproud/golang_protobuf_extensions/pbutil"
+
+	bes "github.com/bzl-io/bzl/proto/bes"
+	build "github.com/bzl-io/bzl/proto/build"
 )
 
 // Default bazel version is whatever is currently in the users' path.
@@ -30,7 +31,7 @@ func New() *Bazel {
 	}
 }
 
-// Set the version of bazel to use.  Given '0.7.0', this looks for .cache/bzl/release/0.7.0/bin/bazel.
+// Set the version of bazel to use.  Given '0.7.0', this looks for .cache/bzl/release/0.7.0/bin/bazelutil.
 func SetVersion(version string) error {
 	home, err := config.GetHome()
 	if err != nil {
@@ -42,7 +43,7 @@ func SetVersion(version string) error {
 		log.Printf("Error: bazel %s does not exist in the release cache.  Try 'bzl install %s' first.", version, version)
 		return err
 	}
-	log.Printf("Setting bazel version: %s\n", bazel)
+	// log.Printf("Setting bazel version: %s\n", bazel)
 	bazel = exe
 	return nil
 }
@@ -82,7 +83,7 @@ func (b *Bazel) Invoke(args []string) (error, int) {
 }
 
 // Make Invocation to bazel and get back the event graph
-func (b *Bazel) InvokeWithEvents(args []string) ([]*stream.BuildEvent, error) {
+func (b *Bazel) InvokeWithEvents(args []string) ([]*bes.BuildEvent, error) {
 	fmt.Printf("\n%s %v\n", b.Name, args)
 	file, err := ioutil.TempFile("/tmp", "bes-")
 	if err != nil {
@@ -134,7 +135,7 @@ func (b *Bazel) Query(pattern string) (*build.QueryResult, error) {
 	return build, nil
 }
 
-func (b *Bazel) readBuildEventStream(filename string) ([]*stream.BuildEvent, error) {
+func (b *Bazel) readBuildEventStream(filename string) ([]*bes.BuildEvent, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Printf("Failed to read <%s>: %s\n", filename, err)
@@ -142,9 +143,9 @@ func (b *Bazel) readBuildEventStream(filename string) ([]*stream.BuildEvent, err
 	}
 	defer f.Close()
 
-	events := make([]*stream.BuildEvent, 0)
+	events := make([]*bes.BuildEvent, 0)
 	for {
-		event := &stream.BuildEvent{}
+		event := &bes.BuildEvent{}
 		remaining, err := pbutil.ReadDelimited(f, event)
 		if remaining == 0 {
 			return events, nil
@@ -161,10 +162,10 @@ func (b *Bazel) readBuildEventStream(filename string) ([]*stream.BuildEvent, err
 // From a list of BuildEvents, return the first one typed as
 // 'Completed'.  Anecdotally, there is only one per bazel invocation.
 // Pointer will be nil if none found.
-func FirstTargetComplete(events []*stream.BuildEvent) *stream.TargetComplete {
+func FirstTargetComplete(events []*bes.BuildEvent) *bes.TargetComplete {
 	for _, event := range events {
 		switch event.Payload.(type) {
-		case *stream.BuildEvent_Completed:
+		case *bes.BuildEvent_Completed:
 			return event.GetCompleted()
 		}
 	}

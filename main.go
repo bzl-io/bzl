@@ -2,11 +2,9 @@ package main
 
 import (
 	"os"
-
-	"github.com/bzl-io/bzl/go/bzl"
 )
 
 func main() {
-	app := bzl.New()
+	app := NewApp()
 	app.Run(os.Args)
 }

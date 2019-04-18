@@ -1,15 +1,15 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 load("@bazel_gazelle//:def.bzl", "gazelle")
 load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
 
 gazelle(
     name = "gazelle",
-    args = [
-        "-build_file_name",
-        "BUILD,BUILD.bazel",
-        "-proto",
-        "disable",
-    ],
+    # args = [
+    #     "-build_file_name",
+    #     "BUILD,BUILD.bazel",
+    #     "-proto",
+    #     "disable",
+    # ],
     command = "fix",
     prefix = "github.com/bzl-io/bzl",
 )
@@ -18,16 +18,34 @@ buildifier(
     name = "buildifier",
 )
 
+go_test(
+    name = "go_default_test",
+    srcs = ["app_test.go"],
+    embed = [":go_default_library"],
+)
+
 go_library(
     name = "go_default_library",
-    srcs = ["main.go"],
+    srcs = [
+        "app.go",
+        "main.go",
+    ],
     importpath = "github.com/bzl-io/bzl",
     visibility = ["//visibility:private"],
-    deps = ["//go/bzl:go_default_library"],
+    deps = [
+        "//bazelutil:go_default_library",
+        "//command/install:go_default_library",
+        "//command/targets:go_default_library",
+        "@com_github_urfave_cli//:go_default_library",
+    ],
 )
 
 go_binary(
     name = "bzl",
     embed = [":go_default_library"],
     visibility = ["//visibility:public"],
+    x_defs = {
+        "github.com/bzl-io/bzl.BUILD_SCM_REVISION": "{BUILD_SCM_REVISION}",
+        "github.com/bzl-io/bzl.BUILD_SCM_DATE": "{BUILD_SCM_DATE}",
+    },
 )

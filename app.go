@@ -1,14 +1,15 @@
-package bzl
+package main
 
 import (
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/bzl-io/go/bzl/bazel"
-	"github.com/bzl-io/go/bzl/command/install"
-	"github.com/bzl-io/go/bzl/command/targets"
 	"github.com/urfave/cli"
+
+	"github.com/bzl-io/bzl/bazelutil"
+	"github.com/bzl-io/bzl/command/install"
+	"github.com/bzl-io/bzl/command/targets"
 )
 
 // Will be replaced at link time to `git rev-parse HEAD`
@@ -21,7 +22,7 @@ type App struct {
 }
 
 // Create a new Application.
-func New() *App {
+func NewApp() *App {
 
 	log.SetPrefix("((bzl)) ")
 
@@ -56,11 +57,11 @@ func New() *App {
 		if len(c.GlobalStringSlice("bazel")) > 0 {
 			args = append(args, c.Args().Tail()...)
 			for _, version := range c.GlobalStringSlice("bazel") {
-				err := bazel.SetVersion(version)
+				err := bazelutil.SetVersion(version)
 				if err != nil {
 					log.Fatalf("Invalid bazel version %s, aborting: %v", version, err)
 				}
-				err, exitCode := bazel.New().Invoke(args)
+				err, exitCode := bazelutil.New().Invoke(args)
 				if exitCode != 0 {
 					log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
 					os.Exit(exitCode)
@@ -69,7 +70,7 @@ func New() *App {
 		} else {
 			log.Println("BAZEL_VERSION not set, falling back to bazel on your PATH")
 			args = append(args, c.Args().Tail()...)
-			err, exitCode := bazel.New().Invoke(args)
+			err, exitCode := bazelutil.New().Invoke(args)
 			if exitCode != 0 {
 				log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
 				os.Exit(exitCode)

@@ -6,7 +6,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/bzl-io/bzl/bazel"
+	"github.com/bzl-io/bzl/bazelutil"
 	build "github.com/bzl-io/bzl/proto/build"
 	"github.com/urfave/cli"
 )
@@ -25,7 +25,7 @@ func execute(c *cli.Context) error {
 		pattern = "//..."
 	}
 
-	query, err := bazel.New().Query(pattern)
+	query, err := bazelutil.New().Query(pattern)
 	if err != nil {
 		return err
 	}
