@@ -2,7 +2,8 @@ package main
 
 import (
 	"os"
-	"github.com/bzl-io/bzl"
+
+	"github.com/bzl-io/bzl/go/bzl"
 )
 
 func main() {

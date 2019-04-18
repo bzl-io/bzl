@@ -1,18 +1,29 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
-# ================================================================
-
-http_archive(
-    name = "io_bazel_rules_go",
-    url = "https://github.com/bazelbuild/rules_go/archive/9031d58ed5017dcaf87e72e06736ef4209f96aee.zip",
-    strip_prefix = "rules_go-9031d58ed5017dcaf87e72e06736ef4209f96aee",
-    sha256 = "e586877342811e61baf8256da8d78a4bfd50084331832b84082f211e8512958d",
+local_repository(
+    name = "build_stack_rules_proto",
+    path = "/home/pcj/go/src/github.com/stackb/rules_proto",
 )
 
-load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains", "go_repository")
+load("@build_stack_rules_proto//:deps.bzl", "io_bazel_rules_go", "bazel_gazelle", "com_github_bazelbuild_buildtools")
+
+io_bazel_rules_go()
+
+bazel_gazelle()
+
+com_github_bazelbuild_buildtools()
+
+load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
 
 go_rules_dependencies()
 
 go_register_toolchains()
+
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+gazelle_dependencies()
+
+# gazelle:repo bazel_gazelle
 
 # ================================================================
 
@@ -88,7 +99,6 @@ go_repository(
 #     commit = "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",
 # )
 
-
 go_repository(
     name = "org_golang_x_tools",
     importpath = "github.com/golang/tools",
@@ -131,7 +141,7 @@ go_repository(
 go_repository(
     name = "com_github_rs_cors",
     importpath = "github.com/rs/cors",
-    commit = "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8", # Aug 1
+    commit = "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8",  # Aug 1
 )
 
 go_repository(

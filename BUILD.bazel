@@ -1,0 +1,33 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
+
+gazelle(
+    name = "gazelle",
+    args = [
+        "-build_file_name",
+        "BUILD,BUILD.bazel",
+        "-proto",
+        "disable",
+    ],
+    command = "fix",
+    prefix = "github.com/bzl-io/bzl",
+)
+
+buildifier(
+    name = "buildifier",
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/bzl-io/bzl",
+    visibility = ["//visibility:private"],
+    deps = ["//go/bzl:go_default_library"],
+)
+
+go_binary(
+    name = "bzl",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

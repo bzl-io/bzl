@@ -1,20 +1,21 @@
 package bzl
 
 import (
-	"os"
 	"fmt"
-	"github.com/urfave/cli"
-	"github.com/bzl-io/bzl/bazel"
-	"github.com/bzl-io/bzl/command/install"
-	"github.com/bzl-io/bzl/command/targets"
 	"log"
+	"os"
+
+	"github.com/bzl-io/go/bzl/bazel"
+	"github.com/bzl-io/go/bzl/command/install"
+	"github.com/bzl-io/go/bzl/command/targets"
+	"github.com/urfave/cli"
 )
 
 // Will be replaced at link time to `git rev-parse HEAD`
 var BUILD_SCM_REVISION = "0000000000000000000000000000000000000000"
 var BUILD_SCM_DATE = "0000-00-00"
 
-// App embeds an urfave/cli.App 
+// App embeds an urfave/cli.App
 type App struct {
 	*cli.App
 }
@@ -23,7 +24,7 @@ type App struct {
 func New() *App {
 
 	log.SetPrefix("((bzl)) ")
-	
+
 	// Create Cli inner app
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
@@ -33,12 +34,12 @@ func New() *App {
 	// Global flags for bzl app
 	app.Flags = []cli.Flag{
 		cli.StringSliceFlag{
-			Name: "bazel",
-			Usage: "Use this version(s) of bazel when running subcommand",
+			Name:   "bazel",
+			Usage:  "Use this version(s) of bazel when running subcommand",
 			EnvVar: "BAZEL_VERSION",
 		},
 	}
-	
+
 	// Add commands
 	app.Commands = []cli.Command{
 		*install.Command,
@@ -51,7 +52,7 @@ func New() *App {
 
 	// Any command not found, just run bazel itself
 	app.CommandNotFound = func(c *cli.Context, commandName string) {
-		args := []string{ commandName }
+		args := []string{commandName}
 		if len(c.GlobalStringSlice("bazel")) > 0 {
 			args = append(args, c.Args().Tail()...)
 			for _, version := range c.GlobalStringSlice("bazel") {

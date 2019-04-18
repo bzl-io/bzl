@@ -1,15 +1,9 @@
 package install
 
 import (
-	"crypto/sha256"	
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/bzl-io/bzl/gh"
-	"github.com/google/go-github/github"
-	"github.com/mitchellh/go-homedir"
-	"github.com/mitchellh/ioprogress"
-	"github.com/urfave/cli"
-	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"log"
@@ -21,30 +15,37 @@ import (
 	"runtime"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/bzl-io/bzl/gh"
+	"github.com/google/go-github/github"
+	"github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/ioprogress"
+	"github.com/urfave/cli"
+	"golang.org/x/net/context"
+
+	humanize "github.com/dustin/go-humanize"
 	download "github.com/joeybloggs/go-download"
-	humanize "github.com/dustin/go-humanize"	
 )
 
 var Command = &cli.Command{
-	Name:    "install",
-	Usage:   "Install a bazel release (or list release assets)",
+	Name:  "install",
+	Usage: "Install a bazel release (or list release assets)",
 	Flags: []cli.Flag{
 		cli.BoolFlag{Name: "list"},
 		cli.BoolFlag{Name: "force"},
 		cli.BoolFlag{Name: "without_jdk"},
 	},
-	Action:  execute,
+	Action: execute,
 }
-
 
 func execute(c *cli.Context) error {
 	version := c.Args().First()
-	
+
 	listOptions := &github.ListOptions{}
 	client := gh.Client()
 	releases, _, err := client.Repositories.ListReleases(context.Background(), "bazelbuild", "bazel", listOptions)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to get release list: %v", err), 1);
+		return cli.NewExitError(fmt.Sprintf("Failed to get release list: %v", err), 1)
 	}
 
 	if version != "" {
@@ -73,7 +74,7 @@ func getReleaseTagNames(releases []*github.RepositoryRelease) []string {
 	}
 	return tags
 }
-	
+
 func listReleases(c *cli.Context, releases []*github.RepositoryRelease) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 	for _, release := range releases {
@@ -118,7 +119,7 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	if goarch == "amd64" {
 		goarch = "x86_64" // is this right?
 	}
-	
+
 	//fmt.Printf("INSTALL %s %s %s: %s\n", goos, goarch, version, *release.Assets[0].BrowserDownloadURL)
 	// https://github.com/bazelbuild/bazel/releases/download/0.7.0/bazel-0.7.0-installer-darwin-x86_64.sh.sha256
 	baseDir := "/tmp"
@@ -129,7 +130,7 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	}
 
 	//fmt.Printf("INSTALL %s %s %s: %s\n", goos, goarch, version, *release.Assets[0].BrowserDownloadURL)
-	
+
 	installer := fmt.Sprintf("bazel-%s-installer-%s-%s.sh", version, goos, goarch)
 	if c.Bool("without_jdk") {
 		installer = fmt.Sprintf("bazel-%s-without-jdk-installer-%s-%s.sh", version, goos, goarch)
@@ -141,11 +142,11 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	if *exeAsset.Name == "" {
 		return cli.NewExitError(fmt.Sprintf("Can't install from release %s (no installer found)", version), 1)
 	}
-	shaAsset := assets[installer + ".sha256"]
+	shaAsset := assets[installer+".sha256"]
 	if *shaAsset.Name == "" {
 		return cli.NewExitError(fmt.Sprintf("Can't install from release %s (no installer sha256 file)", version), 1)
 	}
-	sigAsset := assets[installer + ".sig"]
+	sigAsset := assets[installer+".sig"]
 	if *sigAsset.Name == "" {
 		return cli.NewExitError(fmt.Sprintf("Can't install from release %s (no installer gpg sig)", version), 1)
 	}
@@ -163,7 +164,7 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	if err != nil {
 		return err
 	}
-	
+
 	expected := strings.Fields(string(content))
 
 	// gpg, err := ioutil.ReadFile(sig)
@@ -201,13 +202,12 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 				2)
 		}
 	}
-	
+
 	log.Printf("Sha256 match %s: %s, proceeding with install\n", exe, sha)
 
 	install(c, version, exe)
 	return nil
 }
-
 
 func makeAssetMap(release *github.RepositoryRelease) map[string]github.ReleaseAsset {
 	m := make(map[string]github.ReleaseAsset)
@@ -223,7 +223,7 @@ func GetFileSha256(filename string) (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	
+
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err
@@ -231,7 +231,6 @@ func GetFileSha256(filename string) (string, error) {
 
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
-
 
 func getOrDownloadAsset(baseDir string, asset *github.ReleaseAsset) (string, error) {
 	filename := path.Join(baseDir, *asset.Name)
@@ -256,20 +255,20 @@ func downloadAsset(baseDir string, asset *github.ReleaseAsset) (string, error) {
 	if err != nil {
 		return filename, err
 	}
-	
+
 	out, err := os.Create(filename)
 	if err != nil {
 		return filename, err
 	}
 	defer out.Close()
-	
+
 	if redirect != "" {
 		err = downloadUrl(redirect, out, int64(*asset.Size), *asset.Name)
 	} else {
 		defer rc.Close()
 		err = dl(rc, out, int64(*asset.Size), *asset.Name)
 	}
-	
+
 	return filename, nil
 }
 
@@ -278,14 +277,14 @@ func downloadUrl(url string, out io.Writer, size int64, title string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	client := &http.Client{}
-	
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-	
+
 	return dl(resp.Body, out, size, title)
 }
 
@@ -295,7 +294,7 @@ func downloadUrl2(url string, out io.Writer, size int64, title string) error {
 		return err
 	}
 	defer f.Close()
-	
+
 	return dl(f, out, size, title)
 }
 
@@ -316,9 +315,9 @@ func dl(reader io.Reader, writer io.Writer, size int64, title string) error {
 	// Attempt 3: ioprogress
 	reader = &ioprogress.Reader{
 		Reader: reader,
-		Size: size,
+		Size:   size,
 	}
-	
+
 	_, err := io.Copy(writer, reader)
 	if err != nil {
 		return err
@@ -326,7 +325,7 @@ func dl(reader io.Reader, writer io.Writer, size int64, title string) error {
 
 	//bar.Finish()
 	//progress.Stop()
-	
+
 	return nil
 }
 
@@ -340,19 +339,19 @@ func install(c *cli.Context, version, filename string) error {
 		os.MkdirAll(prefix, os.ModePerm)
 	}
 
-	cmdArgs := []string {
+	cmdArgs := []string{
 		filename,
 	}
 
 	if prefix == "" {
 		cmdArgs = append(cmdArgs, "--user")
 	} else {
-		cmdArgs = append(cmdArgs, "--prefix=" + prefix)
+		cmdArgs = append(cmdArgs, "--prefix="+prefix)
 	}
 
 	log.Printf("Installing %v", cmdArgs)
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run() 
+	return cmd.Run()
 }

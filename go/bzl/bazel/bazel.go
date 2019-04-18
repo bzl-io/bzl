@@ -1,18 +1,19 @@
 package bazel
 
 import (
-	"syscall"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"path"
-	"io/ioutil"
 	"os/exec"
+	"path"
+	"syscall"
+
+	stream "github.com/bzl-io/bzl/proto/build_event_stream_go"
+	build "github.com/bzl-io/bzl/proto/build_go"
+	"github.com/bzl-io/go/bzl/config"
 	"github.com/golang/protobuf/proto"
 	"github.com/matttproud/golang_protobuf_extensions/pbutil"
-	"github.com/bzl-io/bzl/config"
-	build  "github.com/bzl-io/bzl/proto/build_go"
-	stream "github.com/bzl-io/bzl/proto/build_event_stream_go"
 )
 
 // Default bazel version is whatever is currently in the users' path.
@@ -35,7 +36,7 @@ func SetVersion(version string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	exe := path.Join(home, "release", version, "bin", "bazel")
 	if _, err := os.Stat(exe); os.IsNotExist(err) {
 		log.Printf("Error: bazel %s does not exist in the release cache.  Try 'bzl install %s' first.", version, version)
@@ -54,10 +55,10 @@ func (b *Bazel) Invoke(args []string) (error, int) {
 	cmd.Stderr = os.Stderr
 	cmd.Dir = ""
 
-	err := cmd.Run() 
+	err := cmd.Run()
 
 	var exitCode int
-	
+
 	if err != nil {
 		// try to get the exit code
 		if exitError, ok := err.(*exec.ExitError); ok {
@@ -79,7 +80,6 @@ func (b *Bazel) Invoke(args []string) (error, int) {
 
 	return err, exitCode
 }
-
 
 // Make Invocation to bazel and get back the event graph
 func (b *Bazel) InvokeWithEvents(args []string) ([]*stream.BuildEvent, error) {
@@ -127,13 +127,12 @@ func (b *Bazel) Query(pattern string) (*build.QueryResult, error) {
 	err = proto.Unmarshal(out, build)
 	if err != nil {
 		fmt.Printf("Query Error: ", string(cmdOut), err, "\n")
-		
+
 		return nil, err
 	}
 
 	return build, nil
 }
-
 
 func (b *Bazel) readBuildEventStream(filename string) ([]*stream.BuildEvent, error) {
 	f, err := os.Open(filename)
@@ -166,7 +165,7 @@ func FirstTargetComplete(events []*stream.BuildEvent) *stream.TargetComplete {
 	for _, event := range events {
 		switch event.Payload.(type) {
 		case *stream.BuildEvent_Completed:
-			return event.GetCompleted();
+			return event.GetCompleted()
 		}
 	}
 	return nil
