@@ -29,56 +29,72 @@ var Command = &cli.Command{
 		cli.StringSliceFlag{
 			Name:  "platform",
 			Usage: "Name of the @io_bazel_rules_go//go/toolchain:PLATFORM to cross-compile to",
+			Value: &cli.StringSlice{
+				"linux_amd64",
+				"windows_amd64",
+				"darwin_amd64",
+			},
 		},
 		cli.StringSliceFlag{
 			Name:  "platform_name",
 			Usage: "A string mapping of the form PLATFORM=NAME, such as 'windows_amd64=windows-x64_64'",
+			Value: &cli.StringSlice{
+				"windows_amd64=windows-x64_64",
+				"darwin_amd64=darwin-x64_64",
+				"linux_amd64=linux-x64_64",
+			},
 		},
 		cli.StringFlag{
 			Name:  "asset_dir",
 			Usage: "Name of directory where built platform-specific assets should be assembled",
+			Value: ".assets",
 		},
 		cli.StringFlag{
 			Name:  "owner",
 			Usage: "Name of github owner to publish release",
+			Value: "bzl-io",
 		},
 		cli.StringFlag{
 			Name:  "repo",
 			Usage: "Name of github repo to publish release",
+			Value: "bzl",
 		},
 		cli.StringFlag{
 			Name:  "tag",
-			Usage: "Tag name for the release",
+			Usage: "Tag name for the release such as '1.0.0' (required to publish)",
 		},
 		cli.StringFlag{
 			Name:  "notes",
 			Usage: "Release notes filename (a path to markdown file)",
+			Value: "RELEASE.md",
 		},
 		cli.StringFlag{
 			Name:  "commit",
-			Usage: "Commit ID for the release",
+			Usage: "Commit ID for the release (required when publishing a release).",
 		},
 		cli.BoolFlag{
 			Name:  "dry_run",
 			Usage: "Build assets, but don't actually create a release",
 		},
 	},
-	Usage:  "Build target binaries for (multiple) platform(s) and publish a release to GitHub",
-	Action: execute,
+	Usage: "Build target golang binaries for (multiple) platform(s) and publish a release to GitHub",
+	Action: func(c *cli.Context) error {
+		err := execute(c)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("release failed: %v", err), 1)
+		}
+		return nil
+	},
 }
 
 func execute(c *cli.Context) error {
 	platforms := c.StringSlice("platform")
 	target := ""
 
-	//if len(platforms) == 0 {
-	//	return cli.NewExitError("The 'release' command requires a build target in combination with '--platform GOOS_GOARCH' flags", 1)
-	//}
-
 	if len(platforms) > 0 {
 		target = c.Args().First()
 		if target == "" {
-			return cli.NewExitError("The 'release' command requires a build target in combination with platformss", 1)
+			return fmt.Errorf("The 'release' command requires a build target in combination with platforms")
 		}
 	}
 
@@ -98,7 +114,7 @@ func execute(c *cli.Context) error {
 
 		completed := bazelutil.FirstTargetComplete(events)
 		if completed == nil || !completed.Success {
-			return cli.NewExitError(fmt.Sprintf("The invocation failed to complete: %s", args), 1)
+			return fmt.Errorf("The invocation failed to complete: %s", args)
 		}
 
 		files, err := handleTargetCompleted(c, platform, completed)
@@ -114,7 +130,7 @@ func execute(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Release successful: %s\n", release.TagName)
+		fmt.Printf("Release successful: %s\n", release.GetTagName())
 	}
 
 	return nil
@@ -126,7 +142,7 @@ func handleTargetCompleted(c *cli.Context, platform string, completed *bes.Targe
 	for _, file := range importantFiles {
 		copy, err := copyFileToPlatformDir(c, c.String("asset_dir"), platform, file)
 		if err != nil {
-			return nil, cli.NewExitError(fmt.Sprintf("Error while relocating output file %s: %v", file.GetUri(), err), 1)
+			return nil, fmt.Errorf("Error while relocating output file %s: %v", file.GetUri(), err)
 		}
 		copies = append(copies, copy)
 	}
@@ -145,11 +161,9 @@ func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, fil
 
 	if assetDir == "" {
 		assetDir = "dist"
-		//assetDir = path.Join(path.Dir(filename), basename + ".assets")
 	}
 
 	platformName := getPreferredPlatformName(c, platform)
-	//platformDir := path.Join(assetDir, platformName)
 	platformDir := assetDir
 	err := os.MkdirAll(platformDir, os.ModePerm)
 	if err != nil {
@@ -282,7 +296,7 @@ func getReleaseNotes(filename string) (string, error) {
 func createRelease(c *cli.Context, client *github.Client, req *github.RepositoryRelease, files []string) (*github.RepositoryRelease, error) {
 	ctx := context.Background()
 	if c.Bool("dry_run") {
-		return nil, cli.NewExitError("Create release stopped early (dry_run is ON)", 1)
+		return nil, fmt.Errorf("Create release stopped early (dry_run is ON)")
 	}
 	release, res, err := client.Repositories.CreateRelease(ctx, c.String("owner"), c.String("repo"), req)
 	if err != nil {
@@ -291,22 +305,22 @@ func createRelease(c *cli.Context, client *github.Client, req *github.Repository
 			fmt.Fprintf(os.Stderr, "Github responded with 404 for %s/%s; this may represent an authentication error.  Confirm that the env vars BZL_GH_USERNAME and BZL_GH_PASSWORD are set with PUSH access to this repository (https://developer.github.com/v3/troubleshooting/).\n", c.String("owner"), c.String("repo"))
 		}
 		if res.StatusCode == 422 {
-			fmt.Fprintf(os.Stderr, "Github responded with 422 (validation Failed).  This can occur for multiple reasons, but one thing to check is that the target --commit actually exists at the remote repository.\n")
+			fmt.Fprintf(os.Stderr, "Github responded with 422 (validation Failed).  This can occur for multiple reasons (The release already exists? The --commit actually exists at the remote repository?)\n")
 		}
-		return nil, cli.NewExitError(fmt.Sprintf("Create release failed: %v", err), 1)
+		return nil, fmt.Errorf("Create release failed: %v", err)
 	}
 
 	if res.StatusCode != http.StatusCreated {
-		return nil, cli.NewExitError(fmt.Sprintf("Create release failed (invalid status %s): %v", res.Status, err), 1)
+		return nil, fmt.Errorf("Create release failed (invalid status %s): %v", res.Status, err)
 	}
 
 	if *release.ID <= 0 {
-		return nil, cli.NewExitError(fmt.Sprintf("Create release failed to assign a valid ID: %v", release), 1)
+		return nil, fmt.Errorf("Create release failed to assign a valid ID: %v", release)
 	}
 
 	err = uploadAssets(c, client, ctx, *release.ID, files, 5)
 	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Upload release assets failed: %v", err), 1)
+		return nil, fmt.Errorf("Upload release assets failed: %v", err)
 	}
 	return release, nil
 }

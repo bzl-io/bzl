@@ -50,7 +50,7 @@ func SetVersion(version string) error {
 
 // Make Generic invocation to bazel
 func (b *Bazel) Invoke(args []string) (error, int) {
-	fmt.Printf("\n%s %v\n", b.Name, args)
+	//fmt.Printf("\n%s %v\n", b.Name, args)
 	cmd := exec.Command(b.Name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

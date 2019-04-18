@@ -9,12 +9,20 @@ import (
 
 	"github.com/bzl-io/bzl/bazelutil"
 	"github.com/bzl-io/bzl/command/install"
+	"github.com/bzl-io/bzl/command/release"
 	"github.com/bzl-io/bzl/command/targets"
 )
 
 // Will be replaced at link time to `git rev-parse HEAD`
-var BUILD_SCM_REVISION = "0000000000000000000000000000000000000000"
-var BUILD_SCM_DATE = "0000-00-00"
+var (
+	BuildScmRevision = "0000000000000000000000000000000000000000"
+	BuildScmDate     = "0000-00-00"
+)
+
+func main() {
+	app := NewApp()
+	app.Run(os.Args)
+}
 
 // App embeds an urfave/cli.App
 type App struct {
@@ -24,13 +32,13 @@ type App struct {
 // Create a new Application.
 func NewApp() *App {
 
-	log.SetPrefix("((bzl)) ")
+	log.SetPrefix("(( bzl )) ")
 
 	// Create Cli inner app
 	app := cli.NewApp()
 	app.EnableBashCompletion = true
-	app.Usage = "A wrapper for the Bazel build tool"
-	app.Version = fmt.Sprintf("%s (%s)", BUILD_SCM_REVISION, BUILD_SCM_DATE)
+	app.Usage = "Wrapper for the Bazel build tool"
+	app.Version = fmt.Sprintf("https://github.com/bzl-io/bzl/tree/%s (%s)", BuildScmRevision, BuildScmDate)
 
 	// Global flags for bzl app
 	app.Flags = []cli.Flag{
@@ -45,6 +53,7 @@ func NewApp() *App {
 	app.Commands = []cli.Command{
 		*install.Command,
 		*targets.Command,
+		*release.Command,
 	}
 
 	instance := &App{

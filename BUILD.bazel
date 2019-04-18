@@ -26,15 +26,13 @@ go_test(
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "app.go",
-        "main.go",
-    ],
+    srcs = ["app.go"],
     importpath = "github.com/bzl-io/bzl",
     visibility = ["//visibility:private"],
     deps = [
         "//bazelutil:go_default_library",
         "//command/install:go_default_library",
+        "//command/release:go_default_library",
         "//command/targets:go_default_library",
         "@com_github_urfave_cli//:go_default_library",
     ],
@@ -45,7 +43,7 @@ go_binary(
     embed = [":go_default_library"],
     visibility = ["//visibility:public"],
     x_defs = {
-        "github.com/bzl-io/bzl.BUILD_SCM_REVISION": "{BUILD_SCM_REVISION}",
-        "github.com/bzl-io/bzl.BUILD_SCM_DATE": "{BUILD_SCM_DATE}",
+        "main.BuildScmRevision": "{BUILD_SCM_REVISION}",
+        "main.BuildScmDate": "{BUILD_SCM_DATE}",
     },
 )

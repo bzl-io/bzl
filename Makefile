@@ -1,7 +1,7 @@
 HEAD := $(shell git rev-parse HEAD)
 
 install:
-	bazel build //:bzl --workspace_status_command=tools/get_workspace_status.sh && cp --f bazel-bin/linux_amd64_stripped/bzl ~/bin
+	bazel build //:bzl --workspace_status_command=tools/get_workspace_status.sh && cp --f bazel-bin/linux_amd64_stripped/bzl ~/bin/bazel
 
 release:
 	bzl release \
