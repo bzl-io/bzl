@@ -103,7 +103,7 @@ func execute(c *cli.Context) error {
 	for _, platform := range platforms {
 		args := []string{
 			"build",
-			"--experimental_platforms", fmt.Sprintf("@io_bazel_rules_go//go/toolchain:%s", platform),
+			"--platforms", fmt.Sprintf("@io_bazel_rules_go//go/toolchain:%s", platform),
 			target,
 		}
 
