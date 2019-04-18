@@ -2,12 +2,13 @@ package targets
 
 import (
 	"fmt"
-	"os"
 	"io"
+	"os"
 	"text/tabwriter"
+
 	"github.com/bzl-io/bzl/bazel"
+	build "github.com/bzl-io/bzl/proto/build"
 	"github.com/urfave/cli"
-	build "github.com/bzl-io/bzl/proto/build_go"
 )
 
 var Command = &cli.Command{
@@ -22,8 +23,8 @@ func execute(c *cli.Context) error {
 	pattern := c.Args().First()
 	if pattern == "" {
 		pattern = "//..."
-	} 	
-	
+	}
+
 	query, err := bazel.New().Query(pattern)
 	if err != nil {
 		return err
@@ -59,4 +60,3 @@ func printSourceFile(w io.Writer, file *build.SourceFile) {
 func printGeneratedFile(w io.Writer, file *build.GeneratedFile) {
 	fmt.Fprintln(w, "generated\tfile\t", *file.Name)
 }
-

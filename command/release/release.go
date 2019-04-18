@@ -2,14 +2,6 @@ package release
 
 import (
 	"fmt"
-	"github.com/bzl-io/bzl/bazel"
-	"github.com/bzl-io/bzl/gh"
-	"github.com/google/go-github/github"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
-	"golang.org/x/net/context"
-	"github.com/golang/sync/errgroup"	
-	"github.com/davecgh/go-spew/spew"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,57 +10,67 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	stream "github.com/bzl-io/bzl/proto/build_event_stream_go"
+
+	"github.com/bzl-io/bzl/bazel"
+	"github.com/bzl-io/bzl/gh"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/golang/sync/errgroup"
+	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
+	"github.com/urfave/cli"
+	"golang.org/x/net/context"
+
+	bes "github.com/bzl-io/bzl/proto/bes"
 )
 
 var Command = &cli.Command{
-	Name:    "release",
+	Name: "release",
 	Flags: []cli.Flag{
 		cli.StringSliceFlag{
-			Name: "platform",
-			Usage: "Name of the @io_bazel_rules_go//go/toolchain:PLATFORM to cross-compile to", 
+			Name:  "platform",
+			Usage: "Name of the @io_bazel_rules_go//go/toolchain:PLATFORM to cross-compile to",
 		},
 		cli.StringSliceFlag{
-			Name: "platform_name",
-			Usage: "A string mapping of the form PLATFORM=NAME, such as 'windows_amd64=windows-x64_64'", 
+			Name:  "platform_name",
+			Usage: "A string mapping of the form PLATFORM=NAME, such as 'windows_amd64=windows-x64_64'",
 		},
 		cli.StringFlag{
-			Name: "asset_dir",
+			Name:  "asset_dir",
 			Usage: "Name of directory where built platform-specific assets should be assembled",
 		},
 		cli.StringFlag{
-			Name: "owner",
+			Name:  "owner",
 			Usage: "Name of github owner to publish release",
 		},
 		cli.StringFlag{
-			Name: "repo",
+			Name:  "repo",
 			Usage: "Name of github repo to publish release",
 		},
 		cli.StringFlag{
-			Name: "tag",
+			Name:  "tag",
 			Usage: "Tag name for the release",
 		},
 		cli.StringFlag{
-			Name: "notes",
+			Name:  "notes",
 			Usage: "Release notes filename (a path to markdown file)",
 		},
 		cli.StringFlag{
-			Name: "commit",
+			Name:  "commit",
 			Usage: "Commit ID for the release",
 		},
 		cli.BoolFlag{
-			Name: "dry_run",
+			Name:  "dry_run",
 			Usage: "Build assets, but don't actually create a release",
 		},
 	},
-	Usage:   "Build target binaries for (multiple) platform(s) and publish a release to GitHub",
-	Action:  execute,
+	Usage:  "Build target binaries for (multiple) platform(s) and publish a release to GitHub",
+	Action: execute,
 }
 
 func execute(c *cli.Context) error {
 	platforms := c.StringSlice("platform")
 	target := ""
-	
+
 	//if len(platforms) == 0 {
 	//	return cli.NewExitError("The 'release' command requires a build target in combination with '--platform GOOS_GOARCH' flags", 1)
 	//}
@@ -81,22 +83,22 @@ func execute(c *cli.Context) error {
 	}
 
 	allFiles := make([]string, 0)
-		
+
 	for _, platform := range platforms {
-		args := []string {
+		args := []string{
 			"build",
 			"--experimental_platforms", fmt.Sprintf("@io_bazel_rules_go//go/toolchain:%s", platform),
 			target,
 		}
 
-		events, err := bazel.New().InvokeWithEvents(args);
+		events, err := bazel.New().InvokeWithEvents(args)
 		if err != nil {
 			return err
 		}
 
 		completed := bazel.FirstTargetComplete(events)
 		if completed == nil || !completed.Success {
-			return cli.NewExitError(fmt.Sprintf("The invocation failed to complete: %s", args), 1)			
+			return cli.NewExitError(fmt.Sprintf("The invocation failed to complete: %s", args), 1)
 		}
 
 		files, err := handleTargetCompleted(c, platform, completed)
@@ -114,11 +116,11 @@ func execute(c *cli.Context) error {
 		}
 		fmt.Printf("Release successful: %s\n", release.TagName)
 	}
-	
+
 	return nil
 }
 
-func handleTargetCompleted(c *cli.Context, platform string, completed *stream.TargetComplete) ([]string, error) {
+func handleTargetCompleted(c *cli.Context, platform string, completed *bes.TargetComplete) ([]string, error) {
 	importantFiles := completed.ImportantOutput
 	copies := make([]string, 0)
 	for _, file := range importantFiles {
@@ -131,7 +133,7 @@ func handleTargetCompleted(c *cli.Context, platform string, completed *stream.Ta
 	return copies, nil
 }
 
-func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, file *stream.File) (string,error) {
+func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, file *bes.File) (string, error) {
 	uri := file.GetUri()
 
 	if !strings.HasPrefix(uri, "file://") {
@@ -169,41 +171,41 @@ func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, fil
 	return platformFile, nil
 }
 
-func processBuildEvent(event *stream.BuildEvent) error {
+func processBuildEvent(event *bes.BuildEvent) error {
 	switch x := event.Payload.(type) {
-	case *stream.BuildEvent_Progress:
+	case *bes.BuildEvent_Progress:
 		//fmt.Printf("Progress: %+v\n\n", event)
-	case *stream.BuildEvent_Aborted:
+	case *bes.BuildEvent_Aborted:
 		fmt.Printf("Aborted: %+v\n\n", event)
-	case *stream.BuildEvent_LoadingFailed:
+	case *bes.BuildEvent_LoadingFailed:
 		fmt.Printf("LoadingFailed: %+v\n\n", event)
-	case *stream.BuildEvent_AnalysisFailed:
+	case *bes.BuildEvent_AnalysisFailed:
 		fmt.Printf("AnalysisFailed: %+v\n\n", event)
-	case *stream.BuildEvent_Started:
+	case *bes.BuildEvent_Started:
 		fmt.Printf("Started: %+v\n\n", event)
-	case *stream.BuildEvent_CommandLine:
+	case *bes.BuildEvent_CommandLine:
 		fmt.Printf("CommandLine: %+v\n\n", event)
-	case *stream.BuildEvent_OptionsParsed:
+	case *bes.BuildEvent_OptionsParsed:
 		fmt.Printf("OptionsParsed: %+v\n\n", event)
-	case *stream.BuildEvent_WorkspaceStatus:
+	case *bes.BuildEvent_WorkspaceStatus:
 		fmt.Printf("WorkspaceStatus: %+v\n\n", event)
-	case *stream.BuildEvent_Configuration:
+	case *bes.BuildEvent_Configuration:
 		fmt.Printf("Configuration: %+v\n\n", event)
-	case *stream.BuildEvent_Expanded:
+	case *bes.BuildEvent_Expanded:
 		fmt.Printf("Expanded: %+v\n\n", event)
-	case *stream.BuildEvent_Configured:
+	case *bes.BuildEvent_Configured:
 		fmt.Printf("Configured: %+v\n\n", event)
-	case *stream.BuildEvent_Action:
+	case *bes.BuildEvent_Action:
 		fmt.Printf("Action: %+v\n\n", event)
-	case *stream.BuildEvent_NamedSetOfFiles:
+	case *bes.BuildEvent_NamedSetOfFiles:
 		fmt.Printf("NamedSetOfFiles: %+v\n\n", event)
-	case *stream.BuildEvent_Completed:
+	case *bes.BuildEvent_Completed:
 		fmt.Printf("Completed: %+v\n\n", event)
-	case *stream.BuildEvent_TestResult:
+	case *bes.BuildEvent_TestResult:
 		fmt.Printf("TestResult: %+v\n\n", event)
-	case *stream.BuildEvent_TestSummary:
+	case *bes.BuildEvent_TestSummary:
 		fmt.Printf("TestSummary: %+v\n\n", event)
-	case *stream.BuildEvent_Finished:
+	case *bes.BuildEvent_Finished:
 		fmt.Printf("Finished: %+v\n\n", event)
 	case nil:
 	default:
@@ -232,7 +234,6 @@ func CopyFile(src, dst string) error {
 	return d.Close()
 }
 
-
 func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, error) {
 	owner := c.String("owner")
 	if owner == "" {
@@ -255,15 +256,15 @@ func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, e
 		return nil, err
 	}
 	fmt.Println("Uploading assets for release", tag, "...")
-	
+
 	client := gh.Client()
-		
+
 	req := &github.RepositoryRelease{
-		TagName: &tag,
+		TagName:         &tag,
 		TargetCommitish: &commit,
-		Body: &notes,
+		Body:            &notes,
 	}
-	
+
 	release, err := createRelease(c, client, req, files)
 	return release, err
 }
@@ -271,7 +272,7 @@ func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, e
 // Read the given filename into a string.  Return err if any io error
 // occured.
 func getReleaseNotes(filename string) (string, error) {
-	bytes, err := ioutil.ReadFile(filename) 
+	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", err
 	}
@@ -302,7 +303,7 @@ func createRelease(c *cli.Context, client *github.Client, req *github.Repository
 	if *release.ID <= 0 {
 		return nil, cli.NewExitError(fmt.Sprintf("Create release failed to assign a valid ID: %v", release), 1)
 	}
-	
+
 	err = uploadAssets(c, client, ctx, *release.ID, files, 5)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Upload release assets failed: %v", err), 1)
@@ -346,7 +347,6 @@ func uploadAssets(c *cli.Context, client *github.Client, ctx context.Context, re
 	return nil
 }
 
-
 func uploadAsset(c *cli.Context, client *github.Client, ctx context.Context, releaseID int, filename string) (*github.ReleaseAsset, error) {
 
 	filename, err := filepath.Abs(filename)
@@ -363,7 +363,7 @@ func uploadAsset(c *cli.Context, client *github.Client, ctx context.Context, rel
 		// Use base name by default
 		Name: filepath.Base(filename),
 	}
-	
+
 	asset, res, err := client.Repositories.UploadReleaseAsset(ctx, c.String("owner"), c.String("repo"), releaseID, opts, f)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to upload release asset: %s", filename)
