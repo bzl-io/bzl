@@ -159,6 +159,6 @@ $ bazel release \
 
 Print linting issues in build files (buildifier).
 
-### `$ bazel lint`
+### `$ bazel fmt`
 
 Fix formatting issues in build files (buildifier).
