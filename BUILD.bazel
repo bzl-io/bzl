@@ -31,6 +31,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//bazelutil:go_default_library",
+        "//command/fmt:go_default_library",
         "//command/install:go_default_library",
         "//command/release:go_default_library",
         "//command/targets:go_default_library",

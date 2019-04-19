@@ -154,3 +154,11 @@ $ bazel release \
     --platform=windows_amd64 \
     //:bzl
 ```
+
+### `$ bazel lint`
+
+Print linting issues in build files (buildifier).
+
+### `$ bazel lint`
+
+Fix formatting issues in build files (buildifier).

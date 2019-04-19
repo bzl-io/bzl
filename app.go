@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/bzl-io/bzl/bazelutil"
+	fmtcmd "github.com/bzl-io/bzl/command/fmt"
 	"github.com/bzl-io/bzl/command/install"
 	"github.com/bzl-io/bzl/command/release"
 	"github.com/bzl-io/bzl/command/targets"
@@ -54,9 +55,11 @@ func NewApp() *App {
 	// Add commands
 	app.Commands = []cli.Command{
 		*install.Command,
-		*targets.Command,
 		*release.Command,
 		*use.Command,
+		*targets.Command,
+		*fmtcmd.FmtCommand,
+		*fmtcmd.LintCommand,
 	}
 
 	instance := &App{

@@ -1,7 +1,5 @@
 workspace(name = "io_bzl_bzl")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
-
 local_repository(
     name = "build_stack_rules_proto",
     path = "/home/pcj/go/src/github.com/stackb/rules_proto",
@@ -114,7 +112,7 @@ go_repository(
 
 go_repository(
     name = "com_google_bazelbuild_buildtools",
-    commit = "a861d1c9f86278f04ae7719ef48d22016781d766",
+    commit = "8135d8f1de24e6cb453be56ce061c922bf279f2c",
     importpath = "github.com/bazelbuild/buildtools",
 )
 
