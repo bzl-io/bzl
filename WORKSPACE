@@ -1,8 +1,12 @@
 workspace(name = "io_bzl_bzl")
 
-local_repository(
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
     name = "build_stack_rules_proto",
-    path = "/home/pcj/go/src/github.com/stackb/rules_proto",
+    urls = ["https://github.com/stackb/rules_proto/archive/218e598f693964014fc9d3dbc2dfb986fbe09d81.tar.gz"],
+    strip_prefix = "rules_proto-218e598f693964014fc9d3dbc2dfb986fbe09d81",
+    sha256 = "06bd105c1b0f8ea7c2827da045fcb83f44dd2f78e03d98abc1de4ec21e45c9d6",
 )
 
 load(
