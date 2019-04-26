@@ -4,9 +4,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "build_stack_rules_proto",
-    urls = ["https://github.com/stackb/rules_proto/archive/218e598f693964014fc9d3dbc2dfb986fbe09d81.tar.gz"],
-    strip_prefix = "rules_proto-218e598f693964014fc9d3dbc2dfb986fbe09d81",
     sha256 = "06bd105c1b0f8ea7c2827da045fcb83f44dd2f78e03d98abc1de4ec21e45c9d6",
+    strip_prefix = "rules_proto-218e598f693964014fc9d3dbc2dfb986fbe09d81",
+    urls = ["https://github.com/stackb/rules_proto/archive/218e598f693964014fc9d3dbc2dfb986fbe09d81.tar.gz"],
 )
 
 load(
@@ -169,4 +169,10 @@ go_repository(
     name = "com_github_matttproud_golang_protobuf_extensions",
     commit = "c12348ce28de40eed0136aa2b644d0ee0650e56c",
     importpath = "github.com/matttproud/golang_protobuf_extensions",
+)
+
+go_repository(
+    name = "com_github_fatih_color",
+    commit = "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+    importpath = "github.com/fatih/color",
 )

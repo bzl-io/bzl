@@ -66,10 +66,10 @@ func (b *Bazel) Invoke(args []string) (error, int) {
 			ws := exitError.Sys().(syscall.WaitStatus)
 			exitCode = ws.ExitStatus()
 		} else {
-			// This will happen (in OSX) if `name` is not available in $PATH,
-			// in this situation, exit code could not be get, and stderr will be
-			// empty string very likely, so we use the default fail code, and format err
-			// to string and set to stderr
+			// This will happen (in OSX) if `name` is not available in $PATH, in
+			// this situation, exit code could not be get, and stderr will be
+			// empty string very likely, so we use the default fail code, and
+			// format err to string and set to stderr
 			log.Printf("Could not get exit code for failed program: %v, %v", b.Name, args)
 			exitCode = -1
 		}
@@ -120,14 +120,14 @@ func (b *Bazel) Query(pattern string) (*build.QueryResult, error) {
 	cmd := exec.Command(b.Name, args...)
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("Query Error: ", string(out), err, "\n")
+		fmt.Printf("Query Error %q: %v\n", string(out), err)
 		return nil, err
 	}
 
 	build := &build.QueryResult{}
 	err = proto.Unmarshal(out, build)
 	if err != nil {
-		fmt.Printf("Query Error: ", string(cmdOut), err, "\n")
+		fmt.Printf("Query Error %q: %v\n", string(cmdOut), err)
 
 		return nil, err
 	}
