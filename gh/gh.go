@@ -1,13 +1,14 @@
 package gh
 
 import (
+	"os"
+	"path"
+	"strings"
+
 	"github.com/google/go-github/github"
 	"github.com/gregjones/httpcache"
 	"github.com/gregjones/httpcache/diskcache"
 	homedir "github.com/mitchellh/go-homedir"
-	"path"
-	"os"
-	"strings"
 )
 
 var client *github.Client
@@ -21,7 +22,7 @@ func Client() *github.Client {
 	return client
 }
 
-// Create new client. 
+// Create new client.
 func newGithubClient() *github.Client {
 	// Create a BasicAuthTransport if the user has these env var
 	// configured
@@ -48,7 +49,7 @@ func newGithubClient() *github.Client {
 		cacheTransport = httpcache.NewMemoryCacheTransport()
 	}
 
-	// Create a Client 
+	// Create a Client
 	if basicAuth != nil {
 		basicAuth.Transport = cacheTransport
 		return github.NewClient(basicAuth.Client())

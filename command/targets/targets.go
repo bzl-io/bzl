@@ -22,7 +22,7 @@ var Command = &cli.Command{
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:   "nocolor",
-			Usage:  "Don't olorize output (experimental)",
+			Usage:  "Suppress colorized output",
 			EnvVar: "BZL_TARGET_NO_COLOR",
 		},
 		cli.StringSliceFlag{

@@ -96,27 +96,44 @@ Example:
 ```
 $ bazel targets
 
-go_library        rule  //proto/bes:go_default_library
-go_library        rule  //:go_default_library
-go_library        rule  //command:go_default_library
-go_library        rule  //command/targets:go_default_library
-_gazelle_runner   rule  //:gazelle-runner
-go_library        rule  //gh:go_default_library
-go_proto_library  rule  //proto/bes:build_event_stream_go_proto
-proto_library     rule  //proto/build:bzl_proto
-proto_library     rule  //proto/bes:build_event_stream_proto
-go_proto_library  rule  //proto/build:bzl_go_proto
-go_library        rule  //command/release:go_default_library
-sh_binary         rule  //:gazelle
-go_library        rule  //command/install:go_default_library
-go_library        rule  //config:go_default_library
-go_test           rule  //:go_default_test
-go_library        rule  //proto/build:go_default_library
-go_library        rule  //bazelutil:go_default_library
-go_binary         rule  //:bzl
-go_library        rule  //command/use:go_default_library
-_buildifier       rule  //:buildifier
+go_library        //proto/bes:go_default_library
+go_library        //:go_default_library
+go_library        //command:go_default_library
+go_library        //command/targets:go_default_library
+_gazelle_runner   //:gazelle-runner
+go_library        //gh:go_default_library
+go_proto_library  //proto/bes:build_event_stream_go_proto
+proto_library     //proto/build:bzl_proto
+proto_library     //proto/bes:build_event_stream_proto
+go_proto_library  //proto/build:bzl_go_proto
+go_library        //command/release:go_default_library
+sh_binary         //:gazelle
+go_library        //command/install:go_default_library
+go_library        //config:go_default_library
+go_test           //:go_default_test
+go_library        //proto/build:go_default_library
+go_library        //bazelutil:go_default_library
+go_binary         //:bzl
+go_library        //command/use:go_default_library
+_buildifier       //:buildifier
 ```
+
+This command is essentially a synonym for `bazel query` with formatted output.
+
+Additional example:
+
+```
+$  bazel target 'deps(//:*)' --sort=kind --align pkg --include go_bin
+go_binary                                                            //:bzl
+go_binary   @bazel_gazelle//language/go/gen_std_package_list:gen_std_package_list
+go_binary                 @bazel_gazelle//language/proto/gen:gen_known_imports
+go_binary      @com_github_bazelbuild_buildtools//buildifier:buildifier
+go_binary  @com_github_bazelbuild_buildtools//generatetables:generatetables
+go_binary         @com_github_golang_protobuf//protoc-gen-go:protoc-gen-go
+go_binary  @com_google_bazelbuild_buildtools//generatetables:generatetables
+go_binary                    @org_golang_x_tools//cmd/goyacc:goyacc
+```
+
 
 ### `$ bazel release`
 

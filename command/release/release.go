@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -96,6 +97,12 @@ func execute(c *cli.Context) error {
 		if target == "" {
 			return fmt.Errorf("The 'release' command requires a build target in combination with platforms")
 		}
+	}
+
+	username := os.Getenv("BZL_GH_USERNAME")
+	password := os.Getenv("BZL_GH_PASSWORD")
+	if username == "" || password == "" {
+		return fmt.Errorf("need environment variables BZL_GH_USERNAME={your-username}, BZL_GH_PASSWORD={personal-access-token}")
 	}
 
 	allFiles := make([]string, 0)
@@ -298,14 +305,26 @@ func createRelease(c *cli.Context, client *github.Client, req *github.Repository
 	if c.Bool("dry_run") {
 		return nil, fmt.Errorf("Create release stopped early (dry_run is ON)")
 	}
-	release, res, err := client.Repositories.CreateRelease(ctx, c.String("owner"), c.String("repo"), req)
+	owner := c.String("owner")
+	if owner == "" {
+		return nil, fmt.Errorf("Create release: 'owner' is required")
+	}
+	repo := c.String("repo")
+	if repo == "" {
+		return nil, fmt.Errorf("Create release: 'repo' is required")
+	}
+	log.Printf("Creating release for %s/%s...: %+v", owner, repo, req)
+
+	release, res, err := client.Repositories.CreateRelease(ctx, owner, repo, req)
 	if err != nil {
-		spew.Dump(res, err)
-		if res.StatusCode == 404 {
-			fmt.Fprintf(os.Stderr, "Github responded with 404 for %s/%s; this may represent an authentication error.  Confirm that the env vars BZL_GH_USERNAME and BZL_GH_PASSWORD are set with PUSH access to this repository (https://developer.github.com/v3/troubleshooting/).\n", c.String("owner"), c.String("repo"))
-		}
-		if res.StatusCode == 422 {
-			fmt.Fprintf(os.Stderr, "Github responded with 422 (validation Failed).  This can occur for multiple reasons (The release already exists? The --commit actually exists at the remote repository?)\n")
+		if release != nil {
+			spew.Dump(res, err)
+			if res.StatusCode == 404 {
+				fmt.Fprintf(os.Stderr, "Github responded with 404 for %s/%s; this may represent an authentication error.  Confirm that the env vars BZL_GH_USERNAME and BZL_GH_PASSWORD are set with PUSH access to this repository (https://developer.github.com/v3/troubleshooting/).\n", c.String("owner"), c.String("repo"))
+			}
+			if res.StatusCode == 422 {
+				fmt.Fprintf(os.Stderr, "Github responded with 422 (validation Failed).  This can occur for multiple reasons (The release already exists? The --commit actually exists at the remote repository?)\n")
+			}
 		}
 		return nil, fmt.Errorf("Create release failed: %v", err)
 	}
