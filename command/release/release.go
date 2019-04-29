@@ -2,7 +2,6 @@ package release
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -183,7 +182,7 @@ func copyFileToPlatformDir(c *cli.Context, assetDir string, platform string, fil
 	}
 	name += "-" + platformName
 	platformFile := path.Join(platformDir, name)
-	err = CopyFile(filename, platformFile)
+	err = bazelutil.CopyFile(filename, platformFile)
 	if err != nil {
 		return "", err
 	}
@@ -233,26 +232,6 @@ func processBuildEvent(event *bes.BuildEvent) error {
 		return fmt.Errorf("BuildEvent.Payload has unexpected type %T", x)
 	}
 	return nil
-}
-
-// https://gist.github.com/elazarl/5507969
-func CopyFile(src, dst string) error {
-	s, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	// no need to check errors on read only file, we already got everything
-	// we need from the filesystem, so nothing can go wrong now.
-	defer s.Close()
-	d, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(d, s); err != nil {
-		d.Close()
-		return err
-	}
-	return d.Close()
 }
 
 func uploadRelease(c *cli.Context, files []string) (*github.RepositoryRelease, error) {

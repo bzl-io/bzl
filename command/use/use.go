@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -24,14 +25,21 @@ var Command = &cli.Command{
 	Usage: "Output a workspace rule for a given github repository",
 	Flags: []cli.Flag{
 		cli.StringFlag{
-			Name:  "rule",
-			Usage: "Name of the rule to output",
-			Value: "http_archive",
+			Name:   "rule",
+			Usage:  "Name of the rule to output",
+			Value:  "http_archive",
+			EnvVar: "BZL_USE_RULE_OUTPUT",
 		},
 		cli.StringFlag{
-			Name:  "type",
-			Usage: "Type of asset to download (zip, tar)",
-			Value: "tar",
+			Name:   "type",
+			Usage:  "Type of asset to download (zip, tar)",
+			Value:  "tar",
+			EnvVar: "BZL_USE_ASSET_TYPE",
+		},
+		cli.StringFlag{
+			Name:   "history",
+			Usage:  "Query recent commit log for the given branch (example: --history=master)",
+			EnvVar: "BZL_USE_COMMIT_HISTORY",
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -47,9 +55,6 @@ func execute(c *cli.Context) error {
 
 	// Yes, it's one function.
 
-	var owner string
-	var repo string
-
 	arg1 := c.Args().First()
 	if arg1 == "" {
 		return fmt.Errorf("usage: bazel use [OWNER/]REPO TAG (example: bazel use rules_go 0.18.3)")
@@ -64,14 +69,22 @@ func execute(c *cli.Context) error {
 	tag := c.Args().Get(1)
 	archiveType := c.String("type")
 
-	switch len(parts) {
-	case 1:
+	var owner string
+	var repo string
+
+	if len(parts) == 1 {
+		// case like 'bazel use rules_go'
 		owner = "bazelbuild"
 		repo = parts[0]
-	case 2:
+	} else if len(parts) == 2 && len(parts[1]) == 40 {
+		// case like 'bazel use rules_go ef7cca8857f2f3a905b86c264737d0043c6a766e'
+		owner = "bazelbuild"
+		repo = parts[0]
+	} else if len(parts) == 2 {
+		// case like 'bazel use bazelbuild/rules_go ef7cca8857f2f3a905b86c264737d0043c6a766e'
 		owner = parts[0]
 		repo = parts[1]
-	default:
+	} else {
 		return fmt.Errorf("want OWNER/REPO, got %q", c.Args().First())
 	}
 
@@ -80,35 +93,60 @@ func execute(c *cli.Context) error {
 	//
 	client := gh.Client()
 
-	releases, _, err := client.Repositories.ListReleases(context.Background(), owner, repo, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to list releases: %v", err)
-	}
+	var commits []*github.RepositoryCommit
+	var err error
 
-	if len(releases) == 0 {
-		return fmt.Errorf("No releases found for %s/%s", owner, repo)
-	}
-
-	var release *github.RepositoryRelease
-	if tag == "" {
-		listReleases(releases)
-		return fmt.Errorf("please specify release tag (example: %s)", releases[0].GetTagName())
-	}
-
-	// Try and match desired release
-	//
-	for _, r := range releases {
-		if r.GetTagName() == tag {
-			release = r
-			break
+	if c.String("history") != "" {
+		log.Printf("Listing recent commit history for %s/%s...", owner, repo)
+		commits, _, err = client.Repositories.ListCommits(context.Background(), owner, repo, &github.CommitsListOptions{
+			SHA: c.String("history"),
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to list commits for ref %q: %v", c.String("history"), err)
 		}
+
+		if tag == "" {
+			listCommits(commits)
+			return fmt.Errorf("please specify a commit ID (example: %s)", commits[0].GetSHA())
+		}
+	} else if len(tag) != 40 && !strings.HasPrefix(tag, "refs/") {
+
+		releases, _, err := client.Repositories.ListReleases(context.Background(), owner, repo, nil)
+		if err != nil {
+			return fmt.Errorf("Failed to list releases: %v", err)
+		}
+
+		if len(releases) == 0 {
+			return fmt.Errorf("No releases found for %s/%s", owner, repo)
+		}
+
+		var release *github.RepositoryRelease
+
+		if tag == "" {
+			listReleases(releases)
+			return fmt.Errorf("please specify release tag (example: %s)", releases[0].GetTagName())
+		}
+
+		// Try and match desired release
+		//
+		for _, r := range releases {
+			if r.GetTagName() == tag {
+				release = r
+				break
+			}
+		}
+
+		if release == nil {
+			return fmt.Errorf("release %q not found in %s/%s", tag, owner, repo)
+		}
+
+		tag = release.GetTagName()
 	}
 
-	if release == nil {
-		return fmt.Errorf("release %q not found in %s/%s", tag, owner, repo)
+	if strings.HasPrefix(tag, "refs/heads") {
+		parts = strings.Split(tag, "/")
+		tag = parts[len(parts)-1]
 	}
-
-	tag = release.GetTagName()
 
 	//
 	// Normalize the archiveType
@@ -217,6 +255,25 @@ func listReleases(releases []*github.RepositoryRelease) error {
 	}
 	w.Flush()
 	return nil
+}
+
+func listCommits(commits []*github.RepositoryCommit) error {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+	for _, commit := range commits {
+		date := (*commit.Commit.Author.Date).Format("Mon Jan 02 2006")
+		msg := scanFirstLine(commit.Commit.GetMessage())
+		fmt.Fprintln(w, *commit.SHA, "\t", date, "\t", msg)
+	}
+	w.Flush()
+	return nil
+}
+
+func scanFirstLine(in string) string {
+	scanner := bufio.NewScanner(strings.NewReader(in))
+	for scanner.Scan() {
+		return scanner.Text()
+	}
+	return in
 }
 
 func printHttpArchive(wsName, owner, repo, tag, sha256, archiveType string) {

@@ -54,11 +54,11 @@ go_repository(
     importpath = "github.com/davecgh/go-spew",
 )
 
-go_repository(
-    name = "com_golang_google_genproto",
-    commit = "3273178ea4684acc4f512f7bef7349dd72db88f6",
-    importpath = "google.golang.org/genproto",
-)
+# go_repository(
+#     name = "com_golang_google_genproto",
+#     commit = "3273178ea4684acc4f512f7bef7349dd72db88f6",
+#     importpath = "google.golang.org/genproto",
+# )
 
 go_repository(
     name = "com_github_gregjones_httpcache",

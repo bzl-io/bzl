@@ -2,6 +2,7 @@ package bazelutil
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -49,12 +50,13 @@ func SetVersion(version string) error {
 }
 
 // Make Generic invocation to bazel
-func (b *Bazel) Invoke(args []string) (error, int) {
+func (b *Bazel) Invoke(args []string, dir string) (error, int) {
+
 	//fmt.Printf("\n%s %v\n", b.Name, args)
 	cmd := exec.Command(b.Name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = ""
+	cmd.Dir = dir
 
 	err := cmd.Run()
 
@@ -170,4 +172,24 @@ func FirstTargetComplete(events []*bes.BuildEvent) *bes.TargetComplete {
 		}
 	}
 	return nil
+}
+
+// https://gist.github.com/elazarl/5507969
+func CopyFile(src, dst string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	// no need to check errors on read only file, we already got everything
+	// we need from the filesystem, so nothing can go wrong now.
+	defer s.Close()
+	d, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(d, s); err != nil {
+		d.Close()
+		return err
+	}
+	return d.Close()
 }

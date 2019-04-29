@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/bzl-io/bzl/command/install",
     visibility = ["//visibility:public"],
     deps = [
+        "//bazelutil:go_default_library",
         "//gh:go_default_library",
         "@com_github_dustin_go_humanize//:go_default_library",
         "@com_github_google_go_github//github:go_default_library",

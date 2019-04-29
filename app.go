@@ -76,7 +76,7 @@ func NewApp() *App {
 				if err != nil {
 					log.Fatalf("Invalid bazel version %s, aborting: %v", version, err)
 				}
-				err, exitCode := bazelutil.New().Invoke(args)
+				err, exitCode := bazelutil.New().Invoke(args, "")
 				if exitCode != 0 {
 					log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
 					os.Exit(exitCode)
@@ -85,7 +85,7 @@ func NewApp() *App {
 		} else {
 			log.Println("BAZEL_VERSION not set, falling back to bazel on your PATH")
 			args = append(args, c.Args().Tail()...)
-			err, exitCode := bazelutil.New().Invoke(args)
+			err, exitCode := bazelutil.New().Invoke(args, "")
 			if exitCode != 0 {
 				log.Printf("bazel exited with exitCode %d: %v", exitCode, err)
 				os.Exit(exitCode)

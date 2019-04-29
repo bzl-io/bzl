@@ -16,6 +16,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/bzl-io/bzl/bazelutil"
 	"github.com/bzl-io/bzl/gh"
 	"github.com/google/go-github/github"
 	"github.com/mitchellh/go-homedir"
@@ -31,16 +32,56 @@ var Command = &cli.Command{
 	Name:  "install",
 	Usage: "Install a bazel release (or list release assets)",
 	Flags: []cli.Flag{
-		cli.BoolFlag{Name: "list"},
-		cli.BoolFlag{Name: "force"},
+		cli.BoolFlag{
+			Name:  "assets",
+			Usage: "List assets for a particular release (example: bazel install 0.24.1 --assets)",
+		},
+		cli.BoolFlag{
+			Name:  "force",
+			Usage: "Force install",
+		},
 		cli.BoolFlag{Name: "without_jdk"},
+		cli.StringFlag{
+			Name:  "bazel_source_dir",
+			Usage: "Location of the bazelbuild/bazel git repository (if building from source)",
+			Value: "$HOME/.cache/bzl/github.com/bazelbuild/bazel",
+		},
 	},
-	Action: execute,
+	Action: func(c *cli.Context) error {
+		if err := execute(c); err != nil {
+			return cli.NewExitError(fmt.Sprintf("Install aborted: %v", err), 1)
+		}
+		return nil
+	},
 }
 
 func execute(c *cli.Context) error {
 	version := c.Args().First()
 
+	//
+	// Check if already installed
+	//
+	if version != "" && !c.Bool("assets") {
+		homeDir, err := homedir.Dir()
+		if err != nil {
+			return fmt.Errorf("Failed to get home directory: %v", err)
+		}
+		releaseDir := path.Join(homeDir, ".cache", "bzl", "release", version)
+		if FileExists(releaseDir) && !c.Bool("force") && version != "snapshot" {
+			return fmt.Errorf("%v is already installed (use --force to re-install it)", version)
+		}
+	}
+
+	//
+	// if the version looks like a sha1 value, build from source instead.
+	//
+	if len(version) == 40 || version == "snapshot" {
+		return installFromSource(c, version)
+	}
+
+	//
+	// List available releases
+	//
 	listOptions := &github.ListOptions{}
 	client := gh.Client()
 	releases, _, err := client.Repositories.ListReleases(context.Background(), "bazelbuild", "bazel", listOptions)
@@ -86,7 +127,7 @@ func listReleases(c *cli.Context, releases []*github.RepositoryRelease) error {
 
 func processRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	command := "install"
-	if c.Bool("list") {
+	if c.Bool("assets") {
 		command = "assets"
 	}
 
@@ -120,8 +161,6 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 		goarch = "x86_64" // is this right?
 	}
 
-	//fmt.Printf("INSTALL %s %s %s: %s\n", goos, goarch, version, *release.Assets[0].BrowserDownloadURL)
-	// https://github.com/bazelbuild/bazel/releases/download/0.7.0/bazel-0.7.0-installer-darwin-x86_64.sh.sha256
 	baseDir := "/tmp"
 	homeDir, err := homedir.Dir()
 	if err == nil {
@@ -184,28 +223,23 @@ func installRelease(c *cli.Context, release *github.RepositoryRelease) error {
 	}
 
 	if actual != expected[0] {
-		if c.Bool("force") {
-			log.Printf(
-				"%s: got sha256 '%s' but expected '%s' (from %s).  Proceeding with install due to --force\n",
-				exe,
-				actual,
-				expected,
-				sha)
-		} else {
-			return cli.NewExitError(
-				fmt.Sprintf(
-					"%s: got sha256 '%s' but expected '%s' (from %s)\n",
-					exe,
-					actual,
-					expected,
-					sha),
-				2)
-		}
+		return fmt.Errorf(
+			"%s: got sha256 '%s' but expected '%s' (from %s)\n",
+			exe,
+			actual,
+			expected,
+			sha,
+		)
 	}
 
-	log.Printf("Sha256 match %s: %s, proceeding with install\n", exe, sha)
+	log.Printf("Sha256 match %s: %s, proceeding with install...\n", exe, sha)
 
-	install(c, version, exe)
+	if err := install(c, version, exe); err != nil {
+		return err
+	}
+
+	log.Printf("Install was successful ('export BAZEL_VERSION=%s' to use it)", version)
+
 	return nil
 }
 
@@ -354,4 +388,108 @@ func install(c *cli.Context, version, filename string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func installFromSource(c *cli.Context, version string) error {
+
+	// make sure bazel is checked out at the approprite location
+	bazelDir := os.ExpandEnv(c.String("bazel_source_dir"))
+
+	// If the directory does not exist, create it and clone bazel.
+	if !FileExists(bazelDir) {
+		parentDir := filepath.Dir(bazelDir)
+		if err := os.MkdirAll(parentDir, os.ModePerm); err != nil {
+			return fmt.Errorf("Failed to prepare bazel source directory: %v", err)
+		}
+
+		// Execute a git clone
+		cloneArgs := []string{
+			"clone",
+			"https://github.com/bazelbuild/bazel.git",
+		}
+		cmd := exec.Command("git", cloneArgs...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Dir = parentDir
+		cmd.Env = os.Environ()
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("Failed to clone bazel: %v", err)
+		}
+
+	}
+
+	//
+	// Make sure we have the correct version checked out.
+	//
+	if version != "snapshot" {
+		// Pull most recent stuff
+		cmd := exec.Command("git", []string{
+			"fetch",
+			// version,
+		}...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Dir = bazelDir
+		cmd.Env = os.Environ()
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("Failed to fetch %q: %v", version, err)
+		}
+
+		// Checkout to the requested commit
+		cmd = exec.Command("git", []string{
+			"checkout",
+			version,
+		}...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Dir = bazelDir
+		cmd.Env = os.Environ()
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("Failed to checkout %q: %v", version, err)
+		}
+	}
+
+	//
+	// And run the build...
+	//
+	if err, exitCode := bazelutil.New().Invoke([]string{
+		"build",
+		"//src:bazel",
+	}, bazelDir); err != nil {
+		return fmt.Errorf("Failed to build bazel: %v (exit %d)", err, exitCode)
+	}
+
+	//
+	// Make the release dir
+	//
+	var releaseDir string
+	homeDir, err := homedir.Dir()
+	if err != nil {
+		return fmt.Errorf("Failed to read home dir: %v", err)
+	}
+	releaseDir = filepath.Join(homeDir, ".cache", "bzl", "release", version, "bin")
+	if err := os.MkdirAll(releaseDir, os.ModePerm); err != nil {
+		return fmt.Errorf("Failed to prepare bazel release directory: %v", err)
+	}
+
+	//
+	// Copy the binary
+	//
+	srcFile := filepath.Join(bazelDir, "bazel-bin", "src", "bazel")
+	dstFile := filepath.Join(releaseDir, "bazel")
+	if err := bazelutil.CopyFile(srcFile, dstFile); err != nil {
+		return fmt.Errorf("Failed to copy bazel binary to release directory: %v", err)
+	}
+
+	//
+	// Set executable permisssions
+	//
+	os.Chmod(dstFile, 0755)
+
+	log.Printf("Build+Install was successful ('export BAZEL_VERSION=%s' to use it)", version)
+
+	return nil
 }
