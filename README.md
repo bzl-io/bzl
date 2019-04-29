@@ -43,8 +43,22 @@ Examples:
 | Command | Description |
 | --- | --- |
 | `$ bazel install` | List all available releases |
-| `$ bazel install 0.8.0` | Install bazel release 0.8.0 |
-| `$ bazel install --list 0.8.0` | Show the assets bundled in install 0.8.0 |
+| `$ bazel install 0.24.1` | Install bazel release 0.24.1 |
+| `$ bazel install --assets 0.24.1` | Show the assets bundled in install 0.24.1 |
+
+To build bazel from source, specify a commit-id:
+
+```
+$ bazel install 9a32b861799278217c37eb32f864a951ca99617e
+(( bzl )) Install successful.  Remember to 'export BAZEL_VERSION=9a32b861799278217c37eb32f864a951ca99617e'
+```
+
+> The command above will clone bazel to
+> `$HOME/.cache/bzl/github.com/bazebuild/bazel`.  If you already have a version
+> of bazel installed that you'd rather use instead, specify
+> `--bazel_source_dir`. If you want to build & install from `bazel_source_dir`
+> directly (without changing to a specific commit), use `bazel install snapshot
+> --bazel_source_dir=/path/to/bazel` ().
 
 ### `$ bazel use`
 
@@ -84,6 +98,31 @@ $ bazel use rules_go
 0.17.4    Fri Apr 12 2019
 0.16.10   Fri Apr 12 2019
 0.18.2    Sat Apr 06 2019
+...
+```
+
+You can also specify a commit-id:
+
+```
+$ bazel use rules_go ef7cca8857f2f3a905b86c264737d0043c6a766e
+
+http_archive(
+    name = "io_bazel_rules_go",
+    urls = ["https://github.com/bazelbuild/rules_go/archive/ef7cca8857f2f3a905b86c264737d0043c6a766e.tar.gz"],
+    strip_prefix = "rules_go-ef7cca8857f2f3a905b86c264737d0043c6a766e",
+    sha256 = "1a400dc2f69971e3ebce29f7950dc38f8bb7e41c727258b6d2fb70060a4ce429",
+)
+```
+
+To list recent commits on a particular branch:
+
+```
+$ bazel use rules_go --history=master
+(( bzl )) 2019/04/29 06:36:48 Listing recent commit history for bazelbuild/rules_go...
+ef7cca8857f2f3a905b86c264737d0043c6a766e   Wed Apr 24 2019   bazel_test: fix load of generate_toolchain_names (#2040)
+56ecf4406adfd8917ac59ddd0ea008ff1d8f722a   Wed Apr 24 2019   Ensure bazel paths don't leak in stdlib builds (#1945)
+df1bb575ad1b35703e5b62fd0455907896c9eb32   Tue Apr 23 2019   update pin to bazel toolchains repo (#2038)
+528f6faf83f85c23da367d61f784893d1b3bd72b   Sat Apr 20 2019   GoCompilePkg: unified action for building a Go package (#2027)
 ...
 ```
 
