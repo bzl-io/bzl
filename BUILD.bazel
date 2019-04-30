@@ -36,6 +36,7 @@ go_library(
         "//command/release:go_default_library",
         "//command/targets:go_default_library",
         "//command/use:go_default_library",
+        "//command/exec:go_default_library",
         "@com_github_urfave_cli//:go_default_library",
     ],
 )
