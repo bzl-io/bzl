@@ -241,6 +241,8 @@ func execute(c *cli.Context) error {
 	switch rule {
 	case "http_archive":
 		printHttpArchive(wsName, owner, repo, tag, sha256, archiveType)
+	case "go_repository":
+		printGoRepository(wsName, owner, repo, tag, sha256)
 	default:
 		return fmt.Errorf("Unknown --rule=%q", rule)
 	}
@@ -291,4 +293,20 @@ http_archive(
 )
 
 `, wsName, owner, repo, tag, archiveType, stripPrefix, sha256)
+}
+
+func printGoRepository(wsName, owner, repo, tag, sha256 string) {
+	attr := "tag"
+	if len(tag) == 40 {
+		attr = "commit"
+	}
+	fmt.Printf(`
+go_repository(
+    name = %q,
+    importpath = "github.com/%s/%s",
+    %s = %q,
+    sha256 = %q,
+)
+
+`, wsName, owner, repo, attr, tag, sha256)
 }

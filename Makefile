@@ -10,7 +10,7 @@ release: install
 	bazel release \
 	--owner bzl-io \
 	--repo bzl \
-	--tag v0.1.6 \
+	--tag v0.1.7 \
 	--notes RELEASE.md \
 	--commit $(HEAD) \
 	//:bzl

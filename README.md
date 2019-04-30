@@ -218,3 +218,16 @@ Print linting issues in build files (buildifier).
 ### `$ bazel fmt`
 
 Fix formatting issues in build files (buildifier).
+
+### `$ bazel exec`
+
+Similar to `bazel run` but without running in the sandbox, useful when you don't
+want to use `bazel run` and may not be able to easily predict the name of the
+output binary.
+
+For example, the following are largely equivalent:
+
+```
+$ bazel build //:bzl && ./bazel-bin/linux_amd64_stripped/bzl
+$ bazel exec //:bzl
+```
