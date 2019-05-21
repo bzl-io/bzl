@@ -287,12 +287,12 @@ func printHttpArchive(wsName, owner, repo, tag, sha256, archiveType string) {
 	fmt.Printf(`
 http_archive(
     name = %q,
-    urls = ["https://github.com/%s/%s/archive/%s.%s"],
-    strip_prefix = %q,
     sha256 = %q,
+    strip_prefix = %q,
+    urls = ["https://github.com/%s/%s/archive/%s.%s"],
 )
 
-`, wsName, owner, repo, tag, archiveType, stripPrefix, sha256)
+`, wsName, sha256, stripPrefix, owner, repo, tag, archiveType)
 }
 
 func printGoRepository(wsName, owner, repo, tag, sha256 string) {
