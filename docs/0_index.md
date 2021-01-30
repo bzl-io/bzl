@@ -23,3 +23,11 @@ Boost Developer Productivity with the Bazel User Interface.
 
 This tool integrates with the [bazel-stack-vscode](https://stackb.github.io/bazel-stack-vscode/) VSCode extension.
 
+### Pronunciation
+
+`bzl` is pronounced like "bezel", as in "*the bezel of a watch*". The name
+invokes it's function (a wrapper around bazel).
+
+> In the 1950s, watchmakers realized that an external bezel was the best way to
+> add functions to a watch without complicating the movement, and so the
+> external watch bezel was born.
