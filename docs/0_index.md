@@ -5,7 +5,7 @@ permalink: /
 nav_order: 0
 ---
 
-# Bzl: the missing CLI + UI for Bazel
+# Bzl: Integrated CLI + UI + IDE plugin for Bazel
 
 <table><tr>
 <td style="text-align: center"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/7/7d/Bazel_logo.svg/240px-Bazel_logo.svg.png" style="max-width: 120px" /></td>
@@ -14,7 +14,7 @@ nav_order: 0
 </tr><tr>
 <td style="text-align: center">Bazel</td>
 <td style="text-align: center">Stack</td>
-<td style="text-align: center">Bzl</td>
+<td style="text-align: center">VSCode</td>
 </tr></table>
 
 Boost Developer Productivity with the Bazel User Interface.

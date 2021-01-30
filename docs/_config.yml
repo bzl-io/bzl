@@ -13,10 +13,10 @@
 # HTML files, you will see them accessed via {{ site.title }}, {{ site.email }},
 # and so on. You can create any custom variable you would like, and they will be
 # accessible in the templates via {{ site.myvariable }}.
-title: bzl
+title: Bzl
 logo: https://user-images.githubusercontent.com/50580/78734724-3c7fe200-7906-11ea-89b2-ddedb444f3b4.png
 description: >- # this means to ignore newlines until "baseurl:"
-  bzl documentation site
+  Bzl documentation site
 baseurl: "/bzl" # the subpath of your site, e.g. /blog
 url: "https://bzl-io.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 gitweb: "https://github.com/bzl-io/bzl/blob/master"
@@ -31,7 +31,7 @@ footer_content: "Copyright &copy; 2021 Stack.Build."
 
 # Aux links for the upper right navigation
 aux_links:
-  "bzl on github":
+  "Bzl on github":
     - "https://github.com/bzl-io/bzl"
 
 # Exclude from processing.
