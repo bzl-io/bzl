@@ -13,9 +13,9 @@ nav_order: 3
 
 The content area is divided into three main regions:
 
-1. [Repositories](/bzl/repositories): the bazel workspaces on your workstation.
-2. [Streams](/bzl/streams): a view of build event protocol invocations.
-3. [Community](/bzl/community): a list of well-known bazel repositories waiting to be explored.
+1. [Repositories](/repositories): the bazel workspaces on your workstation.
+2. [Streams](/streams): a view of build event protocol invocations.
+3. [Community](/community): a list of well-known bazel repositories waiting to be explored.
 
 ## Menus
 

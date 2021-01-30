@@ -45,4 +45,4 @@ The **Events** tab shows the build events following a build/test of this rule:
 
 <img width="720" alt="https://github.com/bzl-io/bzl/pull/12" src="https://user-images.githubusercontent.com/50580/106349020-c6c77700-6287-11eb-81fc-2a5e4070d496.png" style="border: 1px solid rgba(0,0,0,0.16)">
 
-This is covered in further detail in the [build events](/bzl/build-events) page.
+This is covered in further detail in the [build events](/events) page.

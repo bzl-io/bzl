@@ -18,7 +18,7 @@ You can view the project readme, the `WORKSPACE` file, and the list of contribut
 
 ## Repository Rule Generator
 
-Although the [CLI](/bzl/cli#use) is probably easier here, you can browse the list of releases and generate a rule:
+Although the [CLI](/cli#use) is probably easier here, you can browse the list of releases and generate a rule:
 
 
 <img width="720" alt="https://github.com/bzl-io/bzl/pull/12" src="https://user-images.githubusercontent.com/50580/106352949-33506f00-62a4-11eb-861f-d903ec5819aa.gif">
