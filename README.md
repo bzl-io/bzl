@@ -29,7 +29,7 @@ extension.
 
 ## Documentation
 
-The documentation is hosted in this repository at <https://docs.bzl.io/bzl/>.
+The documentation is hosted in this repository at <https://docs.bzl.io/>.
 
 ## Download
 
