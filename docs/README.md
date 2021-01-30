@@ -1,7 +1,7 @@
 # Docs
 
 This folder contains our Jekyll based docs site which is hosted at
-https://bzl-io.github.io/bzl.
+https://docs.bzl.io/bzl.
 
 When making changes to this docs site, please test your changes locally:
 
