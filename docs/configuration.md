@@ -28,6 +28,8 @@ format is similar to bazel itself having the form `COMMAND --list --of --flags`.
 common --base_dir=/tmp/bzl
 ```
 
+> The location of the .bzlrc file can be overridden via the `BZL_RC_FILE` environment variable.
+
 ## Editor Integration
 
 The UI allows you to open files in your preferred editor/IDE.  By default, this
