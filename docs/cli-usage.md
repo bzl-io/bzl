@@ -120,16 +120,7 @@ $ bzl install 4.0.0
 
 > This caches downloaded binaries in the same location as `bazelisk`.
 
-## Cache
-
-Bzl also functions as an HTTP or gRPC remote cache:
-
-```sh
-$ bazel cache
-Bazel Cache: /Users/i868039/Library/Caches/bzl/bazel-remote-cache
-  --remote_cache=http://localhost:2080
-  --remote_cache=grpc://localhost:2092
-```
+## Language Server
 
 The language server is typically only used by the VSCode extension, but it
 functions as an LSP server for `BUILD` files.
